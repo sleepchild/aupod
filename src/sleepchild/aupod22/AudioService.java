@@ -3,371 +3,289 @@ import android.app.*;
 import android.os.*;
 import android.content.*;
 import java.util.*;
-import android.media.session.*;
-import android.media.*;
 import mrtubbs.postman.*;
 import sleepchild.aupod22.postmanmodels.*;
+import android.media.*;
 
 public class AudioService extends Service implements SongFactory.FactoryEvents
 {
-    //
-    public static final String CMD_START ="cmd.sleep.au.service.start";
-    public static final String CMD_STOP ="sleepy.aupod.cmd.stop.playservice";
-    //public static final String EVENT_SERVICE_READY = "sleep.aup.apservice.event.apready";
-    public static final int requestCode = 999483;
-    public static final String CMD_PLAY ="sleep.au.service.notif.play";
-    public static final String CMD_PAUSE ="sleep.au.service.notif.pause.i";
-    public static final String CMD_PLAY_NEXT ="sleep.au.service.notif.playNExtsong";
-    public static final String CMD_PLAY_PREV ="sleep.au.service.notif.playtrack.previous";
+    public static final int REQUEST_CODE = 914826;
+    public static final String CMD_START = "sleepchild.aupod.service_cmd.start";
     
-    private AudioPlayer aupod;
-    private Handler mHandle = new Handler(Looper.getMainLooper());
-    private SongItem currentSong, iSong;
-    private List<SongItem> songList;// = new ArrayList<>();
+    public static final String CMD_PLAY = "sleepchild.aupod.service_cmd_PLAY";
+    public static final String CMD_PAUSE = "sleepchild.aupod.service_cmd.PAUSECMD";
+    public static final String CMD_PLAY_PAUSE = "sleepchild.aupod.service_cmd.PAUSEplayp";
+    public static final String CMD_PLAY_NEXT = "sleepchild.aupod.service_cmd.playnextsong";
+    public static final String CMD_PLAY_PREV = "sleepchild.aupod.service_cmdplayprev.song";
     
-    private AudioManager am;
-    boolean audioFocusGranted=false;
-   // boolean isPlaying=false;
+    public static final String CMD_MEDIA_BUTTON = "sleepchild.aupod.service.MEDIA_BUTTON.CMD";
     
-    Context ctx;
-
+    private Handler handle = new Handler(Looper.getMainLooper());
+    private AudioPlayer player;
+    AudioManager audioMgr;
+    private SPrefs prefs;
+    private Context ctx;
+    final int nid = 826384;
+    boolean receiversReg=false;
+    
+    // todo: create a singleton global object to hold the songs?
+    private List<SongItem> songlist=null;
+    
     @Override
-    public void onCreate()
-    {
-        super.onCreate();
-        PostMan.getInstance().register(this);
-        ctx = getApplicationContext();
-        
-        aupod = new AudioPlayer(this);
-        SongFactory.getInstance().getAll(this, this);
-        //
-        registerNoisy();
-        am = (AudioManager) getSystemService(AUDIO_SERVICE);
-        //registerHeadsetPlug();
-        //*/
-    }
-    
-    @PostEvent
-    public void onPlaybackRequest(PlaybackRequest req){
-        PlaybackRequest.PLAYBACK_TYPE type = req.getType();
-        if(type==PlaybackRequest.PLAYBACK_TYPE.PLAY){
-            //
-        }else if(type==PlaybackRequest.PLAYBACK_TYPE.PLAY_SONGITEM){
-            play((SongItem)req.object);
-        }else if(type==PlaybackRequest.PLAYBACK_TYPE.PAUSE){
-            //
-        }else if (type==PlaybackRequest.PLAYBACK_TYPE.STOP){
-            //
-        }
-    }
-
-    @Override
-    public IBinder onBind(Intent p1)
-    {
+    public IBinder onBind(Intent p1){
         return null;
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
-    {
+    public void onCreate(){
+        PostMan.getInstance().register(this);
+        super.onCreate();
+        ctx = getApplicationContext();
+        audioMgr = (AudioManager) getSystemService(AUDIO_SERVICE);
+        prefs = new SPrefs(ctx);
+        player = new AudioPlayer();
+        SongFactory.get().registerEventListener(this);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId){
         String cmd = intent.getAction();
-        if(cmd != null){
-            switch(cmd){
-                case "hp":
-                    String p = intent.getExtras().getString("hpath");
-                    iSong = new SongItem(p);
-                    play(iSong);
-                    fix282();
-                    break;
-                case CMD_START:
-                    PostMan.getInstance().post(new AudioServiceConnect(this));
-                    break;
-                case CMD_STOP:
-                    //
-                    break;
-                case CMD_PLAY:
-                    if(aupod!=null){
-                        resume();
-                    }else{
-                        // start new song
-                    }
-                    break;
-                case CMD_PAUSE:
-                    if(aupod!=null){
-                        pause();
-                    }
-                    break;
-                    
-                case CMD_PLAY_NEXT:
-                    playnext();
-                    break;
-                case CMD_PLAY_PREV:
-                    playPrevious();
-                    break;
-            }
+        switch(cmd){
+            case CMD_START:
+                PostMan.getInstance().post(new AudioServiceConnect(this));
+                break;
+            case CMD_PLAY:
+                resume();
+                break;
+            case CMD_PAUSE:
+                pause();
+                break;
+            case CMD_PLAY_NEXT:
+                playNext();
+                break;
+            case CMD_PLAY_PREV:
+                playPrev();
+                break;
+            case CMD_MEDIA_BUTTON:
+                handleMediaButton();
+                break;
         }
-        return START_NOT_STICKY;
-    }
-    
-    public void getSongList(){
-        if(songList==null){
-            SongFactory.getInstance().getAll(this, this);
-        }else{
-            PostMan.getInstance().post(new SongsListReadyEvent(songList));
-        }
-    }
-    
-    public static void playSong(Context ctx, String path){
-        Intent s = new Intent(ctx, AudioService.class);
-        s.setAction("hp");
-        s.putExtra("hpath",path);
-        ctx.startService(s);
+        return START_NOT_STICKY;// 2
     }
 
     public static void start(Context ctx){
-        try{
-        Intent s = new Intent(ctx, AudioService.class);
-        s.setAction(CMD_START);
-        ctx.startService(s);
-        }catch(Exception e){
-            Utils.log(e.getMessage());
-        }
-        //*/
-    }
-    
-    public static void end(Context ctx){
-        Intent s = new Intent(ctx, AudioService.class);
-        s.setAction(CMD_STOP);
-        ctx.startService(s);
-    }
-    
-    private void updateNotif(Boolean playing){
-        startForeground(876, Noteaf.get(this, currentSong, playing));
-    }
-    
-    public void play(SongItem si){
-        //isPlaying=true;
-        currentSong = si;
-        aupod.play(currentSong);
-        updateNotif(true);
-        //APEvents.getInstance().postSongResume(si);
-        PostMan.getInstance().post(new SongResumeEvent(si));
-        requestAudioFocus();
-        
-    }
-    
-    public void pause(){
-        aupod.pause();
-       // isPlaying=false;
-        updateNotif(false);
-        stopForeground(false);
-        //APEvents.getInstance().postSongPause();
-        PostMan.getInstance().post(new SongPauseEvent(currentSong));
-        
-    }
-    
-    public void resume(){
-        aupod.resume();
-       // isPlaying=true;
-        updateNotif(true);
-        //APEvents.getInstance().postSongResume(currentSong);
-        PostMan.getInstance().post(new SongResumeEvent(currentSong));
-        requestAudioFocus();
-        
-    }
-    
-    public void playPause(){
-        if(aupod.isPlaying()){
-            pause();
-        }else{
-            if(aupod.isActive){
-                resume();
-            }else{
-                play(currentSong);
-                //
-            }
-        }
-    }
-    
-    public boolean isPlaying(){
-        return aupod.isPlaying();
-    }
-    
-    public void playnext(){
-        int id = songList.indexOf(currentSong);
-        id++;
-        if(id<= songList.size()-1){
-            currentSong = songList.get(id);
-            play(currentSong);
-        }
-    }
-    
-    public void playPrevious(){
-        int id = songList.indexOf(currentSong);
-        id--;
-        if(id<0){
-            id=0;
-        }
-        currentSong = songList.get(id);
-        play(currentSong);
-    }
-    
-    public int getDuration(){
-        return aupod.getDuration();
-    }
-    
-    public int getCurrentPosition(){
-        return aupod.getCurrentPosition();
-    }
-    
-    public SongItem getCurrentSong(){
-        return currentSong;
-    }
-    
-    public void stop(){
-        aupod.stop();
-        stopForeground(true);
-    }
-    
-    public void onSongPlaying(SongItem si){
-        currentSong = si;
-        //APEvents.getInstance().postSongResume(si);
-    }
-    
-    @Override
-    public void onSongsReady(final List<SongItem> slist){
-        mHandle.postDelayed(new Runnable(){
-            @Override
-            public void run(){
-                songList = slist;
-                // todo: get this from prefs
-                currentSong = songList.get(0);
-                fix282();
-                
-                //APEvents.getInstance().postSongListReady(slist);
-                PostMan.getInstance().post(new SongsListReadyEvent(slist));
-                
-            }
-        },1);
-    }
-
-    @Override
-    public void onGetSongsError(final String reason)
-    {
-        mHandle.postDelayed(new Runnable(){
-            @Override
-            public void run(){
-                Utils.toast(AudioService.this, reason);
-            }
-        },1);
-    }
-    
-    void registerHeadsetPlug(){
-        IntentFilter hpf = new IntentFilter(AudioManager.ACTION_HEADSET_PLUG);
-        registerReceiver(headsetPlugReceiver, hpf);
-    }
-    
-    void unregisterHeadsetPlug(){
-        unregisterReceiver(headsetPlugReceiver);
-    }
-    
-    BroadcastReceiver headsetPlugReceiver = new BroadcastReceiver(){
-        @Override
-        public void onReceive(Context p1, Intent p2)
-        {
-            resume();
-        } 
-    };
-    
-    void registerNoisy(){
-        IntentFilter nf = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-        registerReceiver(noisyReceiver, nf);
-    }
-    
-    void unregisterNoisy(){
-        unregisterReceiver(noisyReceiver);
-    }
-    
-    BroadcastReceiver noisyReceiver = new BroadcastReceiver(){
-        @Override
-        public void onReceive(Context p1, Intent p2)
-        {
-            pause();
-        }
-    };
-    
-    void requestAudioFocus(){
-        if(audioFocusGranted){
-            return;
-        }
-        int result = am.requestAudioFocus(audioFocusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        if(result==AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
-            audioFocusGranted=true;
-        }else{
-            //
-        }
-    }
-    
-    void dropAudioFocus(){
-        am.abandonAudioFocus(audioFocusListener);
-        audioFocusGranted=false;
-    }
-    
-    AudioManager.OnAudioFocusChangeListener audioFocusListener = new AudioManager.OnAudioFocusChangeListener(){
-        @Override
-        public void onAudioFocusChange(int state)
-        {
-            switch(state){
-                case AudioManager.AUDIOFOCUS_GAIN:
-                    if(audioFocusGranted){
-                        resume();
-                    }
-                    break;
-                case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
-                    //
-                    break;
-                case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
-                    //
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS:
-                    pause();
-                    dropAudioFocus();
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                    pause();
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                    //
-                    break;
-                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                    pause();
-                    break;
-            }
-        }
-    };
-    
-    private void fix282(){
-        if(songList!=null && iSong!=null){
-            for(SongItem si : songList){
-                if(si.path.equalsIgnoreCase(iSong.path.replace("file://",""))){
-                    currentSong = si;
-                    updateNotif(aupod.isPlaying());
-                    break;
-                }
-            }
-        }
+        Intent i = new Intent(ctx, AudioService.class);
+        i.setAction(CMD_START);
+        ctx.startService(i);
     }
 
     @Override
     public void onDestroy()
     {
-        dropAudioFocus();
-        unregisterHeadsetPlug();
-        unregisterNoisy();
-        //
+        unRegisterAudioNoisy();
+        unRegisterMediaButtons();
+        player.stop();
         super.onDestroy();
     }
     
     
+    /////////////////
+    ///
+    
+    public void playSong(SongItem si){
+        player.play(si);
+        prefs.saveLastPath(si.path);
+    }
+    
+    public void pause(){
+        player.pause();
+    }
+    
+    public void resume(){
+        player.resume();
+    }
+    
+    public void playPause(){
+        if(player.isPlaying()){
+            pause();
+        }else{
+            resume();
+        }
+    }
+    
+    public void playPrev(){
+        int idx = songlist.indexOf(getCurrentSong());
+        idx--;
+        if(idx<0){
+            idx=0;
+        }
+        playSong(songlist.get(idx));
+    }
+    
+    public void playNext(){
+        int idx = songlist.indexOf( getCurrentSong() );
+        idx++;
+        if(idx<songlist.size()){
+            playSong(songlist.get(idx));
+        }
+    }
+    
+    public boolean isPlaying(){
+        return player.isPlaying();
+    }
+    
+    public SongItem getCurrentSong(){
+        return player.getCurrentSong();
+    }
+    
+    public int getCurrentPosition(){
+        return player.getCurrentPosition();
+    }
+    
+    public void seekTo(int pos){
+        player.seekTo(pos);
+    }
+    
+    
+    ////////////////
+    ////
+    
+    //todo: how to safely/efficiently update songlist?
+    public void getSongList(){
+        if(songlist==null){
+            SongFactory.get().getSongs(this);
+        }else{
+            //todo: we should update the songlist in case sth changed!!
+            PostMan.getInstance().post(new SongsListReadyEvent(songlist));
+        }
+    }
+    
+    
+    /////////////////////
+    //// 
+
+    @PostEvent
+    public void onPlayRequest(final PlaybackRequest req){
+        handle.postDelayed(new Runnable(){
+            public void run(){
+                switch(req.getType()){
+                    case PlaybackRequest.TYPE.PLAY_SONGITEM:
+                        if(req.object instanceof SongItem){
+                            playSong((SongItem)req.object);
+                        }
+                        break;
+                    case PlaybackRequest.TYPE.PAUSE:
+                        pause();
+                        break;
+                    case PlaybackRequest.TYPE.PLAY:
+                        resume();
+                        break;
+                }
+            }
+        },0);
+    }
+    
+    @PostEvent
+    public void onSongComplete(SongCompletionEvent evt){
+        handle.postDelayed(new Runnable(){
+            public void run(){
+                playNext();
+            }
+        },0);  
+    }
+    
+    @PostEvent
+    public void onResumeSong(SongResumeEvent evt){
+        startForeground(nid, Noteaf.get(this, player.getCurrentSong(), true) );
+        registerReceivers();
+    }
+    
+    @PostEvent
+    public void onPauseSong(SongPauseEvent evt){
+        startForeground(nid, Noteaf.get(this, player.getCurrentSong(), false) );
+        stopForeground(false);
+    }
+
+    // todo: COMPLETE REWRITE NEDED!
+    boolean f2=true;
+    @Override
+    public void onGetSongsResult(final List<SongItem> list){
+        handle.postDelayed(new Runnable(){
+            public void run(){
+                songlist = list;
+                //*
+                if(!songlist.isEmpty() && f2){
+                    f2 = false;
+                    player.setSong(songlist.get(0));
+                    
+                    /////
+                    // this is terrible. We Must implement a playing queue and do this there
+                    
+                    //@lp : last played song path
+                    String lp = prefs.getLastPath();
+                    // lp is empty bcause it was reset or was never set
+                    if(lp.isEmpty()){
+                        player.setSong(songlist.get(0));
+                    }else{
+                        SongItem ss=null;
+                        for (SongItem s : songlist){
+                            if(s.path.equals(lp)){
+                                ss = s;
+                                break;// break the loop; no need to check others
+                            }
+                        }
+                        if(ss!=null){// song still exists in same path as last time.
+                            player.setSong(ss);
+                        }else{// we reach here because the song was moved/renamed/deleted
+                            //set the first song int he list and clear the preference
+                            player.setSong(songlist.get(0));
+                            prefs.saveLastPath("");
+                        } 
+                    }
+                }
+                //*/
+                // setup done; send the list
+                PostMan.getInstance().post(new SongsListReadyEvent(songlist));
+            }
+        },0);  
+    }
+
+    @Override
+    public void onGetSongsError(String message){
+        //
+    }
+    
+    
+    ////////////////
+    // the private life of AudioService.
+    
+    private void registerReceivers(){
+        if(receiversReg){return;}
+        receiversReg = true;
+        registerAudioNoisy();
+        registerMediaButtons();
+    }
+    
+    private void registerAudioNoisy(){
+        //
+    }
+    
+    private void unRegisterAudioNoisy(){
+        //
+    }
+    
+    ComponentName mediaButtonComp;// <-- move to top of file.
+    private void registerMediaButtons(){
+        mediaButtonComp = new ComponentName(this, ButtonReciever.class.getName());
+        audioMgr.registerMediaButtonEventReceiver(mediaButtonComp);
+    }
+    
+    private void unRegisterMediaButtons(){
+        audioMgr.unregisterMediaButtonEventReceiver(mediaButtonComp);
+    }
+    
+    private void handleMediaButton(){
+        playPause();
+    }
     
 }

@@ -29,7 +29,7 @@ public class BaseActivity extends Activity
         startActivity(new Intent(this, clazz));
     }
 
-    @Override
+    //@Override
     public void onPointerCaptureChanged(boolean hasCapture)
     {
         // TODO: Implement this method

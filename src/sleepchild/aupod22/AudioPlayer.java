@@ -2,16 +2,16 @@ package sleepchild.aupod22;
 import android.content.*;
 import android.media.*;
 import java.io.*;
+import mrtubbs.postman.*;
+import sleepchild.aupod22.postmanmodels.*;
 
-public class AudioPlayer
-{
-    private AudioService ctx;
-    public MediaPlayer mPlayer;
-    public boolean isActive=false;
-    SongItem currentsong;
+public class AudioPlayer{
     
-    public AudioPlayer(AudioService ctx){
-        this.ctx = ctx;
+    private MediaPlayer mPlayer;
+    public boolean isActive=false;
+    private SongItem currentsong;
+    
+    public AudioPlayer(){
         initPlayer();
     }
     
@@ -29,7 +29,7 @@ public class AudioPlayer
             public void onCompletion(MediaPlayer p1)
             {
                 isActive=false;
-                
+                PostMan.getInstance().post(new SongCompletionEvent(currentsong));
             }
         });
         mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
@@ -42,42 +42,47 @@ public class AudioPlayer
         
     }
     
-    // play the specified song
-    public void play(SongItem si){
+    public void setSong(SongItem si){
+        stop();
         currentsong = si;
-        if(mPlayer != null){
-            mPlayer.stop();
-            mPlayer.reset();
-        }
         try
         {
             mPlayer.setDataSource(si.path);
             mPlayer.prepare();
-            mPlayer.start();
-            isActive=true;
-            ctx.onSongPlaying(si);
         }
-        catch (SecurityException e)
-        {}
-        catch (IllegalArgumentException e)
-        {}
         catch (IllegalStateException e)
         {}
         catch (IOException e)
         {}
+        catch (SecurityException e)
+        {}
+        catch (IllegalArgumentException e)
+        {}
+    }
+    
+    public SongItem getCurrentSong(){
+        return currentsong;
+    }
+    
+    // play the specified song
+    public void play(SongItem si){
+        setSong(si);
+        resume();
     }
     
     // resume playing current song
     public void resume(){
         mPlayer.start();
-        ctx.onSongPlaying(currentsong);
+        isActive = true;
+        PostMan.getInstance().post(new SongResumeEvent(currentsong));
     }
     
-    // pause the song
+    // pause the current song
     public void pause(){
         if(mPlayer!=null && mPlayer.isPlaying()){
             mPlayer.pause();
         }
+        PostMan.getInstance().post(new SongPauseEvent(currentsong));
     }
     
     // stop and reset the player
@@ -87,6 +92,7 @@ public class AudioPlayer
             mPlayer.reset();  
         }
         isActive=false;
+        
     }
     
     public boolean isPlaying(){
@@ -100,4 +106,9 @@ public class AudioPlayer
     public int getCurrentPosition(){
         return mPlayer.getCurrentPosition();
     }
+    
+    public void seekTo(int pos){
+        mPlayer.seekTo(pos);
+    }
+    
 }

@@ -27,14 +27,16 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PlayerActivity"></activity>
+            android:name=".PlayerActivity"
+            android:launchMode="singleTop"></activity>
         <activity 
             android:name=".SettingsActivity"
             android:launchMode="singleTop"/>
         <activity
             android:name=".IntentActivity"
             android:theme="@style/ClearBack"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -44,6 +46,13 @@
         </activity>
         
         <service android:name=".AudioService"/>
+            
+        <receiver
+            android:name=".ButtonReciever">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

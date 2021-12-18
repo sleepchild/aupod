@@ -16,7 +16,7 @@ public class SettingsActivity extends BaseActivity
     }
     
     public void init(){
-        
+        //
     }
     
     

@@ -1,7 +1,12 @@
 package sleepchild.aupod22;
 import android.content.*;
-import android.widget.*;
-import java.io.*;
+import android.widget.Toast;
+import java.io.FileOutputStream;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class Utils
 {
@@ -19,5 +24,9 @@ public class Utils
         }
         catch (FileNotFoundException e)
         {}catch(IOException e){}
+    }
+    
+    public static Drawable bmpToDrawable(Context ctx, Bitmap bmp){
+        return new BitmapDrawable(ctx.getResources(), bmp);
     }
 }

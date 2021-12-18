@@ -11,22 +11,20 @@ import android.graphics.*;
 import android.net.*;
 import android.graphics.drawable.*;
 import mrtubbs.postman.*;
-import mrtubbs.postman.sampleobjects.*;
 import sleepchild.aupod22.postmanmodels.*;
-//import sleepchild.view.*;
+import sleepchild.aupod22.tabs.*;
 
 public class MainActivity extends BaseActivity
 {
     AudioService aupod;
     ImageView currentImage;
-    public final static int requestCode = 22466;
+    public final static int REQUEST_CODE = 22466;
     ListView list001;
     SongListAdaptor sAdaptor;
     TextView currentsongTitle, currentsongArtist;
     ImageView miniPlayPause;
     TabController tabController;
     SongsListTab songsTab;
-    View cv;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,8 +32,7 @@ public class MainActivity extends BaseActivity
         setContentView(R.layout.activity_main);
         //
         init();
-        getWindow().setNavigationBarColor(getResources().getColor(R.color.pluto));
-        //AudioService.start(this);
+        //getWindow().setNavigationBarColor(getResources().getColor(R.color.pluto));
     }
     //*
     private void init(){
@@ -49,38 +46,6 @@ public class MainActivity extends BaseActivity
         tabController.add(songsTab);//index 0
         
         tabController.show(0);
-        cv = findViewById(R.id.activity_main_tabtoggle_songs);
-    }
-    
-    public void switchTab(View v){
-        int id = v.getId();
-        switch(id){
-            case R.id.activity_main_tabtoggle_songs:
-                tabController.show(0);
-                break;
-            case R.id.activity_main_tabtoggle_artists:
-                toast("w.i.p");
-                break;
-            case R.id.activity_main_tabtoggle_albums:
-                toast("w.i.p");
-                break;
-            case R.id.activity_main_tabtoggle_playlists:
-                toast("w.i.p");
-                break;
-        }
-        cvc(v);
-    }
-    public void cvc(View v){
-        
-        cv.setBackgroundColor(0);
-        TextView tv = (TextView)((LinearLayout)cv).getChildAt(0);
-        tv.setTextColor(getColor(R.color.white));
-    
-        v.setBackgroundColor(getResources().getColor(R.color.white));
-        tv = (TextView)((LinearLayout)v).getChildAt(0);
-        tv.setTextColor(getColor(R.color.black));
-        
-        cv = v;
     }
     
     public void onClick(View v){
@@ -93,11 +58,10 @@ public class MainActivity extends BaseActivity
                 if(aupod!=null){
                     aupod.playPause();
                 }
-                PostMan.getInstance().post(new StringMess("a mesage"));
                 break;
             case R.id.activity_main_btn_next:
                 if(aupod!=null){
-                    aupod.playnext();
+                    aupod.playNext();
                 }
                 break;
         }
@@ -122,6 +86,7 @@ public class MainActivity extends BaseActivity
                 songsTab.update(event.songList);
                 updateCurrentInfo();
                 updateButtons();
+                songsTab.showCurrent();
             }
         });
     }
@@ -147,6 +112,7 @@ public class MainActivity extends BaseActivity
     }
     
     private void updateButtons(){
+        //*
         if(aupod!=null){
             if(aupod.isPlaying()){
                 miniPlayPause.setBackgroundResource(R.drawable.ic_pause);
@@ -154,27 +120,37 @@ public class MainActivity extends BaseActivity
                 miniPlayPause.setBackgroundResource(R.drawable.ic_play);
             }
         }
+        //*/
     }
     
     
     private void updateCurrentInfo(){
+        //todo: merge in @updateButtons methods
         if(aupod==null){return;}
-        SongItem si = aupod.getCurrentSong();
+        //*
+        final SongItem si = aupod.getCurrentSong();
         currentsongTitle.setText(si.title);
         currentsongArtist.setText(si.artist);
         if(si.icon!=null){
             currentImage.setBackgroundDrawable(new BitmapDrawable(getResources(), si.icon));
         }else{
-            Imgur.with(this).load(si.artUri).callback(new Imgur.ImgurResult(){
+            SongFactory.get().updateSong(si, new SongFactory.UCB(){
                 @Override
-                public void onImage(Bitmap image)
-                {
-                    currentImage.setBackgroundDrawable(new BitmapDrawable(getResources(), image));
+                public void onResult(final SongItem item){
+                    runOnUiThread(new Runnable(){
+                        public void run(){
+                            si.icon = item.icon;
+                            currentImage.setBackgroundDrawable(Utils.bmpToDrawable(ctx, si.icon));
+                            if(si.icon==null){
+                                currentImage.setBackgroundResource(R.drawable.fallback_cover);
+                            }
+                        }
+                    });
                 }
-            }).start();
+            });
         }
-        //findViewById(R.id.u56).invalidate();
-        //list001.setSelection(sAdaptor.getPos(si));
+        songsTab.setCurrent(si);
+        //*/
     }
 
     @Override

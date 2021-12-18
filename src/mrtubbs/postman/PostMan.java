@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 
 public class PostMan{
 	//
-	public volatile static PostMan deftInstance;
+	private volatile static PostMan deftInstance;
 	/*
 	 / holds a list of subscribers and ther subscribed subscriptions ;)
 	 / the subscription is basicly an object with info abt the type and method of the subscription
@@ -65,7 +65,7 @@ public class PostMan{
     //}
 
 	public void post(Object event){
-		//
+        //
 		Class<?> eventType = event.getClass();
 		Set<Object> sublist = subscriberMap.keySet();
 		// loop through each subscriber's subscriptions and 

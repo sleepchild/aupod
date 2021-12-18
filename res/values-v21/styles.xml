@@ -5,10 +5,11 @@
         <item name="android:colorPrimary">@color/primary</item>
         <item name="android:colorPrimaryDark">@color/primaryDark</item>
         <item name="android:colorAccent">@color/accent</item>
+        <item name="android:navigationBarColor">@color/pluto</item>
     </style>
     
     <style name="ClearBack" parent="AppTheme">
-        <item name="android:colorPrimaryDark">#70000000</item>
+        <item name="android:colorPrimaryDark">#00000000</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:backgroundDimEnabled">true</item>

@@ -1,16 +1,16 @@
 package sleepchild.aupod22;
-import android.graphics.*;
-import android.net.*;
+
+import android.graphics.Bitmap;
 
 public class SongItem
 {
-    String title="";
-    String artist="";
-    String path="";
-    long duration=0;
-    Uri artUri;
-    Bitmap icon=null;
-    //public boolean hasIcon=true;
+    public String title="";
+    public String artist="";
+    public String path="";
+    public String album="";
+    public long duration=0;
+    public Bitmap icon=null;
+    public boolean updated=false;
     
     public SongItem(){
         //

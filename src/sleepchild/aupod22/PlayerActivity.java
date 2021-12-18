@@ -13,12 +13,16 @@ public class PlayerActivity extends BaseActivity
 {
 
     TextView currentTitle, currentArtist;
+    TextView trackTimeCurrent, trackTimeDuration;
     LinearLayout art2Background;
     ImageView currentArt;
     AudioService aupod;
-    SongItem si;
+//    SongItem currentSong;
     ImageView playpauseIcon;
     SeekBar seeker;
+    Runnable seekerTick;
+    boolean seektouch;
+    Handler handle;
     
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -29,15 +33,60 @@ public class PlayerActivity extends BaseActivity
     }
     
     void init(){
+        handle = new Handler();
         currentTitle = (TextView) findViewById(R.id.auplayer_tv_title);
         currentArtist = (TextView) findViewById(R.id.auplayer_tv_artist);
         art2Background = (LinearLayout) findViewById(R.id.aupalyer_iv_art2_background);
         currentArt = (ImageView) findViewById(R.id.auplayer_iv_art);
         playpauseIcon = (ImageView) findViewById(R.id.auplayer_btn_playpause);
         seeker = (SeekBar) findViewById(R.id.aupalyer_seeker);
+        seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            @Override
+            public void onProgressChanged(SeekBar p1, int pos, boolean touch)
+            {
+                if(seektouch){
+                    aupod.seekTo(pos);
+                    trackTimeCurrent.setText(formatTime(pos));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar p1)
+            {
+                stopSeeker();
+                 seektouch = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar p1)
+            {
+                seektouch = false;
+                //*
+                if(aupod.isPlaying()){
+                    startSeeker();
+                }
+                //*/
+            }
+        });
+        
+        seekerTick = new Runnable(){
+            @Override
+            public void run(){
+                if(aupod!=null){
+                    int pos = aupod.getCurrentPosition();
+                    seeker.setProgress(pos);
+                    trackTimeCurrent.setText(formatTime(pos));
+                    handle.postDelayed(seekerTick,1000);
+                }
+            }
+        };
+        
+        trackTimeCurrent = (TextView) findViewById(R.id.auplayer_currentpos);
+        trackTimeDuration = (TextView) findViewById(R.id.auplayer_duration);
     }
     
     void updateInfo(){
+        //*
         SongItem si = aupod.getCurrentSong();
         currentTitle.setText(si.title);
         currentArtist.setText(si.artist);
@@ -45,12 +94,18 @@ public class PlayerActivity extends BaseActivity
             currentArt.setImageBitmap(si.icon);
             art2Background.setBackground(new BitmapDrawable(getResources(), si.icon));
         }else{
-            //
+            currentArt.setImageResource(R.drawable.fallback_cover);
+            art2Background.setBackgroundResource(R.drawable.fallback_cover);
         }
-        seeker.setMax(aupod.getDuration());
+        seeker.setMax((int)si.duration);
+        seeker.setProgress(aupod.getCurrentPosition());
+        trackTimeDuration.setText(formatTime((int)si.duration));
+        //*/
+        
     }
     
     void updateButtons(){
+        //*
         if(aupod!=null){
             if(aupod.isPlaying()){
                 playpauseIcon.setImageResource(R.drawable.ic_pause);
@@ -58,42 +113,34 @@ public class PlayerActivity extends BaseActivity
                 playpauseIcon.setImageResource(R.drawable.ic_play);
             }
         }
+        //*/
     }
     
-    Thread seekerThread;
     void startSeeker(){
-        if(seekerThread!=null && seekerThread.isAlive()){
-            seekerThread.interrupt();
-        }
-        seekerThread = null;
-        
-        seekerThread = new Thread(new Runnable(){
-            public void run(){
-                if(aupod!=null){
-                    while(aupod.isPlaying()){
-                        runOnUiThread(new Runnable(){
-                            public void run(){
-                                seeker.setProgress(aupod.getCurrentPosition());
-                                try
-                                {
-                                    Thread.sleep(1000);
-                                }
-                                catch (InterruptedException e)
-                                {}
-                            }
-                        });
-                    }
-                }
-            }
-        });
-        
-        seekerThread.start();
+        stopSeeker();
+        handle.postDelayed(seekerTick, 1000);
     }
+    
     void stopSeeker(){
-        if(seekerThread!=null&&seekerThread.isAlive()){
-            seekerThread.interrupt();
+        handle.removeCallbacks(seekerTick);
+    }
+    
+    String formatTime(int time){
+        //String t = "";
+        int hrs = (int) (time/ (1000*60*60)) % 60;
+        int min = (int) ( time/ (1000*60)) % 60;
+        int sec = (int) (time /1000) % 60;
+        if(hrs==0){
+            return d(min)+":"+d(sec);
         }
-        seekerThread=null;
+        return d(hrs)+":"+d(min)+":"+d(sec);
+    }
+    
+    String d(int t){
+        if(t<10){
+            return "0"+t;
+        }
+        return ""+t;
     }
     
     public void onButton(View v){
@@ -106,12 +153,12 @@ public class PlayerActivity extends BaseActivity
                 break;
             case R.id.auplayer_btn_next:
                 if(aupod!=null){
-                    aupod.playnext();
+                    aupod.playNext();
                 }
                 break;
             case R.id.auplayer_btn_prev:
                 if(aupod!=null){
-                    aupod.playPrevious();
+                    aupod.playPrev();
                 }
                 break;
         }
@@ -121,7 +168,12 @@ public class PlayerActivity extends BaseActivity
     public void onConnect(AudioServiceConnect conn){
         aupod = conn.service;
         updateInfo();
+        //*
         updateButtons();
+        if(aupod.isPlaying()){
+            startSeeker();
+        }
+        //*/
     }
     
     @PostEvent
@@ -130,7 +182,7 @@ public class PlayerActivity extends BaseActivity
             public void run(){
                 updateInfo();
                 updateButtons();
-                //startSeeker();
+                startSeeker();
             }
         });
     }
@@ -141,13 +193,20 @@ public class PlayerActivity extends BaseActivity
             public void run(){
                 updateInfo();
                 updateButtons();
+                stopSeeker();
             }
         });
+    }
+    
+    //@PostEvent
+    public void onSongStopped(){
+        
     }
     
     @Override
     protected void onPause()
     {
+        stopSeeker();
         //APEvents.getInstance().unregister(this);
         PostMan.getInstance().unregister(this);
         super.onPause();

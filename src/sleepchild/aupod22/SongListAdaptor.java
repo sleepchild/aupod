@@ -5,20 +5,32 @@ import android.content.*;
 import java.util.*;
 import android.graphics.*;
 import android.graphics.drawable.*;
+import android.os.*;
+import mrtubbs.postman.*;
+import sleepchild.aupod22.postmanmodels.*;
 
 public class SongListAdaptor extends BaseAdapter
 {
+    Handler handle = new Handler();
     LayoutInflater inf;
     List<SongItem> songList = new ArrayList<>();
     Context ctx;
+    SongItem currentSong;
     
     public SongListAdaptor(Context ctx){
         this.ctx = ctx;
         inf = LayoutInflater.from(ctx);
+        //PostMan.getInstance().register(this);
     }
     
     public void update(List<SongItem> list){
         this.songList = list;
+        notifyDataSetChanged();
+    }
+    
+    public void setCurrent(SongItem songitem){
+        //
+        this.currentSong = songitem;
         notifyDataSetChanged();
     }
     
@@ -36,7 +48,6 @@ public class SongListAdaptor extends BaseAdapter
     @Override
     public Object getItem(int p1)
     {
-        // TODO: Implement this method
         return songList.get(p1);
     }
 
@@ -47,11 +58,20 @@ public class SongListAdaptor extends BaseAdapter
         return p1;
     }
 
-    @Override
+    //@Override
     public CharSequence[] getAutofillOptions()
     {
         // TODO: Implement this method
         return null;
+    }
+    
+    @PostEvent
+    public void onSongResume(SongResumeEvent evt){
+        handle.postDelayed(new Runnable(){
+            public void run(){
+                //
+            }
+        },0);
     }
 
     @Override
@@ -66,21 +86,38 @@ public class SongListAdaptor extends BaseAdapter
         TextView artist = (TextView) v.findViewById(R.id.songlist_itemArtist);
         artist.setText(item.artist);
         
-        final ImageView art = (ImageView) v.findViewById(R.id.songlist_item_albumart);
-        if(item.icon==null){
-            Imgur.with(ctx).load(item.artUri).callback(new Imgur.ImgurResult(){
-                public void onImage(Bitmap image){
-                    item.icon = image;
-                    art.setBackground(new BitmapDrawable(ctx.getResources(), image));
-                    //art.setImageBitmap(image);
-                }
-            }).start();
-        }else{
-            art.setBackground(new BitmapDrawable(ctx.getResources(), item.icon));
+        if(currentSong!=null && currentSong.equals(item)){
+            v.setBackgroundResource(R.color.songitem_active_bg);
         }
-        //
+        
+        final ImageView art = (ImageView) v.findViewById(R.id.songlist_item_albumart);
+        if(item.updated){
+            if(item.icon!=null){
+                art.setBackgroundDrawable(new BitmapDrawable(ctx.getResources(),item.icon));
+            }
+        }else{
+            // this be a mess..
+            SongFactory.get().updateSong(item, new SongFactory.UCB(){
+                @Override
+                public void onResult(final SongItem si)
+                {
+                    handle.postDelayed(new Runnable(){
+                        public void run(){
+                            //item.title = si.title;
+                            //item.artist = si.artist;
+                            item.icon = si.icon;
+                            item.updated = true;
+                            if(item.icon!=null){
+                                art.setBackgroundDrawable(new BitmapDrawable(ctx.getResources(),item.icon));
+                            }
+                        }
+                    },0);
+                }
+            });
+        }
         v.setTag(item);
         return v;
     }
     
 }
+

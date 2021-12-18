@@ -7,12 +7,14 @@ import android.net.*;
 
 public class SongRetreiverCursor
 {
-    Context ctx;
-    public SongRetreiverCursor(Context ctx){
-        this.ctx = ctx;
+    //Context ctx;
+    private SongRetreiverCursor(){
+        //this.ctx = ctx;
     }
     
     public static List<SongItem> get(Context ctx){
+        if(ctx==null){return null;}
+        
         List<SongItem> stitles = new ArrayList<>();
         
         Uri suri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -29,7 +31,6 @@ public class SongRetreiverCursor
         if(c==null || c.getCount() ==0){
             return null;
         }
-        
         c.moveToFirst();
         
         do{
@@ -38,9 +39,8 @@ public class SongRetreiverCursor
             si.title = c.getString(c.getColumnIndex(MediaStore.Audio.Media.TITLE));
             si.artist = c.getString(c.getColumnIndex(MediaStore.Audio.Media.ARTIST));
             si.path = c.getString(c.getColumnIndex(MediaStore.Audio.Media.DATA));
-            int artid = c.getInt(c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-            Uri albumArtUri = Uri.parse("content://media/external/audio/albumart");
-            si.artUri = ContentUris.withAppendedId(albumArtUri, artid);
+            si.album = c.getString(c.getColumnIndex(MediaStore.Audio.Media.ALBUM));
+            si.duration = c.getInt(c.getColumnIndex(MediaStore.Audio.Media.DURATION));
             
             stitles.add(si);
             //
@@ -50,8 +50,5 @@ public class SongRetreiverCursor
         
         return stitles;
     }
-    
-   
-    
     
 }
