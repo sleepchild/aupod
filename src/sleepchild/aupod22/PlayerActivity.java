@@ -1,4 +1,5 @@
 package sleepchild.aupod22;
+
 import android.os.*;
 import android.widget.*;
 import android.graphics.*;
@@ -8,6 +9,7 @@ import sleepchild.aupod22.postmanmodels.*;
 import android.graphics.drawable.*;
 import android.view.*;
 import java.util.concurrent.*;
+import sleepchild.aupod22.menu.*;
 
 public class PlayerActivity extends BaseActivity
 {
@@ -17,18 +19,18 @@ public class PlayerActivity extends BaseActivity
     LinearLayout art2Background;
     ImageView currentArt;
     AudioService aupod;
-//    SongItem currentSong;
     ImageView playpauseIcon;
     SeekBar seeker;
     Runnable seekerTick;
     boolean seektouch;
     Handler handle;
+    SongOptions songMenu;
     
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.auplayer);
+        setContentView(R.layout.activity_auplayer);
         init();
     }
     
@@ -83,6 +85,8 @@ public class PlayerActivity extends BaseActivity
         
         trackTimeCurrent = (TextView) findViewById(R.id.auplayer_currentpos);
         trackTimeDuration = (TextView) findViewById(R.id.auplayer_duration);
+        
+        songMenu = new SongOptions(this);
     }
     
     void updateInfo(){
@@ -97,7 +101,13 @@ public class PlayerActivity extends BaseActivity
             currentArt.setImageResource(R.drawable.fallback_cover);
             art2Background.setBackgroundResource(R.drawable.fallback_cover);
         }
-        seeker.setMax((int)si.duration);
+        
+        if(aupod.isPlaying()){
+            seeker.setMax(aupod.getDuration());
+        }else{
+            seeker.setMax((int)si.duration);
+        }
+        
         seeker.setProgress(aupod.getCurrentPosition());
         trackTimeDuration.setText(formatTime((int)si.duration));
         //*/
@@ -160,6 +170,12 @@ public class PlayerActivity extends BaseActivity
                 if(aupod!=null){
                     aupod.playPrev();
                 }
+                break;
+            case R.id.auplayer_btn_back:
+                finish();
+                break;
+            case R.id.auplayer_btn_options:
+                songMenu.show(aupod.getCurrentSong());
                 break;
         }
     }

@@ -11,6 +11,8 @@ public class AudioService extends Service implements SongFactory.FactoryEvents
 {
     public static final int REQUEST_CODE = 914826;
     public static final String CMD_START = "sleepchild.aupod.service_cmd.start";
+    public static final String CMD_EXIT = "sleepchild.aupod.service_cmdE_Exit";
+    
     
     public static final String CMD_PLAY = "sleepchild.aupod.service_cmd_PLAY";
     public static final String CMD_PAUSE = "sleepchild.aupod.service_cmd.PAUSECMD";
@@ -140,6 +142,10 @@ public class AudioService extends Service implements SongFactory.FactoryEvents
     
     public int getCurrentPosition(){
         return player.getCurrentPosition();
+    }
+    
+    public int getDuration(){
+        return player.getDuration();
     }
     
     public void seekTo(int pos){
@@ -284,8 +290,27 @@ public class AudioService extends Service implements SongFactory.FactoryEvents
         audioMgr.unregisterMediaButtonEventReceiver(mediaButtonComp);
     }
     
+    Runnable dblk;
+    int d=0;
     private void handleMediaButton(){
-        playPause();
+        if(dblk==null){
+            dblk = new Runnable(){
+                public void run(){
+                    //single click
+                    d=0;
+                    playPause();
+                }
+            };
+        }
+        d++;
+        if(d==2){
+            // double click
+            handle.removeCallbacks(dblk);
+            playNext();
+            d=0;
+        }else if(d==1){
+            handle.postDelayed(dblk,250);
+        }
     }
     
 }
