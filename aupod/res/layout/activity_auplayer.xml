@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sleepchild.view.ContainerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pluto">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp">
+
+            <LinearLayout
+                android:id="@+id/auplayer_btn_back"
+                android:onClick="onButton"
+                android:orientation="vertical"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:gravity="center">
+
+                <sleepchild.view.TintedImageView
+                    android:clickable="false"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:background="@drawable/ic_keyboard_arrow_left_black_24dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/auplayer_btn_options"
+                android:onClick="onButton"
+                android:orientation="vertical"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:gravity="center">
+
+                <sleepchild.view.TintedImageView
+                    android:clickable="false"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:background="@drawable/ic_more_vert_black_24dp"/>
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:tag="artback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_weight="1.0">
+
+            <LinearLayout
+                android:id="@+id/aupalyer_iv_art2_background"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/fallback_cover"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#00000000"
+                android:alpha="0.3"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/layout3LinearLayout1">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.0"
+                    android:padding="20dp">
+
+                    <ImageView
+                        android:id="@+id/auplayer_iv_art"
+                        android:src="@drawable/fallback_cover"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp">
+
+                    <TextView
+                        android:id="@+id/auplayer_tv_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="If I Were You"
+                        android:background="@color/pluto"
+                        android:textColor="@color/text"
+                        android:textSize="20sp"
+                        android:layout_marginBottom="4dp"
+                        android:ellipsize="end"
+                        android:singleLine="true"/>
+
+                    <TextView
+                        android:id="@+id/auplayer_tv_artist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sirens"
+                        android:textColor="@color/text"
+                        android:textSize="16sp"
+                        android:background="@color/pluto"
+                        android:ellipsize="end"
+                        android:singleLine="true"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+
+            <SeekBar
+                android:id="@+id/aupalyer_seeker"
+                android:layout_width="match_parent"
+                android:layout_height="18dp"/>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/auplayer_currentpos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:textColor="@color/text"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/auplayer_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:layout_alignParentRight="true"
+                    android:textColor="@color/text"
+                    android:textSize="14sp"/>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:id="@+id/auplayer_btn_prev"
+                    android:onClick="onButton"
+                    android:orientation="vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="15dp">
+
+                    <sleepchild.view.TintedImageView
+                            android:clickable="false"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/ic_prev"/>
+
+                </LinearLayout>
+
+
+                <sleepchild.view.TintedImageView
+                    android:id="@+id/auplayer_btn_playpause"
+                    android:onClick="onButton"
+                    android:layout_width="100dp"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_height="100dp"
+                    android:src="@drawable/ic_play"
+                    android:layout_marginRight="30dp"
+                    android:layout_marginLeft="30dp"/>
+
+                <LinearLayout
+                    android:id="@+id/auplayer_btn_next"
+                    android:onClick="onButton"
+                    android:orientation="vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="15dp">
+
+                    <sleepchild.view.TintedImageView
+                        android:clickable="false"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:background="@drawable/ic_next"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</sleepchild.view.ContainerLayout>
