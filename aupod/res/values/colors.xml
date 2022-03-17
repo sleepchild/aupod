@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#000000</color>
+    <color name="primaryDark">@color/pluto</color>
+    <color name="accent">@color/color2</color>
+    
+    <color name="pluto">#082B56</color>
+    <color name="plutonia">#0A5CB9</color>
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
+    
+    <color name="color2">#DF6F0F</color>
+    
+    <color name="d">#082B56</color>
+    
+    <color name="text">@color/color2</color>
+    
+    <color name="songitem_active_bg">#D7D7D7</color>
+</resources>
