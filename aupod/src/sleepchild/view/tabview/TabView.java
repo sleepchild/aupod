@@ -10,6 +10,8 @@ import android.graphics.drawable.*;
 import android.content.res.*;
 import sleepchild.aupod22.tabs.*;
 import java.util.*;
+import sleepchild.aupod22.*;
+import sleepchild.view.*;
 
 public class TabView extends LinearLayout {
 
@@ -37,16 +39,19 @@ public class TabView extends LinearLayout {
     Context ctx;
 
     LinearLayout tabstrip;
-    LinearLayout tabcontainer;
+    RoundedLinearLayout tabcontainer;
 
     int tabStripBackground=0;
     int tabContainerBackground=0;
     int rootBackground=0;
     int cornerRadius=0;
-    int colorWhite, colorBlack;
+    int colorBorder;
 
     boolean showStrip = true;
     Tab currentTab=null;
+    
+    int currentIndex=0;
+    int borderWidth=0;
 
     //Map<String, Tab> tablist = new HashMap<>();
 
@@ -59,7 +64,7 @@ public class TabView extends LinearLayout {
         ctx = getContext();
         View v = LayoutInflater.from(ctx).inflate(R.layout.customview_tabview, null, false);
 
-        tabcontainer = (LinearLayout) v.findViewById(R.id.customview_tabview_tabcontainer);
+        tabcontainer = (RoundedLinearLayout) v.findViewById(R.id.customview_tabview_tabcontainer);
         tabstrip = (LinearLayout) v.findViewById(R.id.customview_tabview_tabstrip);
 
         addView(v, new ViewGroup.LayoutParams(
@@ -68,9 +73,9 @@ public class TabView extends LinearLayout {
 
         gdrc = new GradientDrawable();
         gdrc.setCornerRadius(20);
-        int col = ctx.getResources().getColor(R.color.color2);
-        int bord = ctx.getResources().getDimensionPixelSize(R.dimen.border_width_bw2);
-        gdrc.setStroke(bord, col);
+        colorBorder = ctx.getResources().getColor(R.color.color2);
+        borderWidth = ctx.getResources().getDimensionPixelSize(R.dimen.border_width_bw2);
+        gdrc.setStroke(borderWidth, colorBorder);
         //
     }
 
@@ -85,11 +90,11 @@ public class TabView extends LinearLayout {
         tv.setText(title);
         v.removeAllViews();
         tv.setOnClickListener(new View.OnClickListener(){
-                public void onClick(View v){
-                    int i = tabTitles.indexOf(tv);
-                    showTab(i);
-                }
-            });
+            public void onClick(View v){
+                int i = tabTitles.indexOf(tv);
+                showTab(i);
+            }
+        });
         tabTitles.add(tv);
         tabstrip.addView(tv);
     }
@@ -104,11 +109,12 @@ public class TabView extends LinearLayout {
     }
     
     public void showTab(Tab tab){
-        int idx = tablist.indexOf(tab);
-        showTab(idx);
+        currentIndex = tablist.indexOf(tab);
+        showTab(currentIndex);
     }
 
     public void showTab(int index){
+        currentIndex = index;
         if(index>=0 && index<tablist.size()){
             Tab tab = tablist.get(index);
             if(currentTab==tab){
@@ -123,13 +129,27 @@ public class TabView extends LinearLayout {
             }
         }
     }
-
+    
     private void _show(Tab tab){
         currentTab = tab;
         tabcontainer.removeAllViews();
         tabcontainer.addView(tab.getView());
     }
-
+    
+    public void onApplyTheme(ThemeManager.Theme theme){
+        setBackgroundColor(theme.background);
+        for(Tab t : tablist){
+            t.onApplyTheme(theme);
+        }
+        for(TextView tv : tabTitles){
+            tv.setTextColor(theme.text);
+        }
+        colorBorder = theme.dividers;
+        //
+        gdrc.setStroke(borderWidth, colorBorder);
+        _setTitles(currentIndex);
+        tabcontainer.setBorderColor(theme.dividers);
+    }
 
 
 }

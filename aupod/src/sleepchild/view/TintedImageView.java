@@ -35,13 +35,11 @@ public class TintedImageView extends ImageView
         ctx = getContext();
         setTint(ctx.getResources().getColor(R.color.color2));
     }
-
-    @Override
-    public void setBackgroundResource(int resid)
-    {
-        // TODO: Implement this method
-        super.setBackgroundResource(resid);
-        //setTint();
+    
+    // oh what a mess!!
+    public void setBackgroundResourceAndReset(int resid){
+        setBackgroundResource(resid);
+        reset();
     }
     
     public void reset(){
@@ -53,9 +51,9 @@ public class TintedImageView extends ImageView
         setColorFilter(color);
         Drawable d = getBackground();
         if(d!=null){
-            //d = d.mutate();
+            d = d.mutate();
             
-            //d.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
+            d.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
             d.setTint(color);
             setBackground(d);
         }

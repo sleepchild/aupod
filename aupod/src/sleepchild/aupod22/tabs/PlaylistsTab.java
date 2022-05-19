@@ -14,7 +14,7 @@ public class PlaylistsTab extends Tab
 
     public PlaylistsTab(MainActivity act){
         this.act = act;
-        root = LayoutInflater.from(act).inflate(R.layout.list_view,null,false);
+        root = LayoutInflater.from(act).inflate(R.layout.default_listview,null,false);
         list1 = (ListView) root.findViewById(R.id.list_view_list1);
     }
 
@@ -22,4 +22,5 @@ public class PlaylistsTab extends Tab
     public View getView(){
         return root;
     }
+    
 }

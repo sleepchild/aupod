@@ -17,7 +17,8 @@ public class SPrefs{
         BG_COLOR,
         TEXT_COLOR_P,
         TEXT_COLOR_S,
-        REPEAT_MODE
+        REPEAT_MODE,
+        RESTART_SONG_ON_PREV
     }
     
     public SPrefs(Context ctx){
@@ -54,6 +55,11 @@ public class SPrefs{
     
     public void setBackgroundColor(int color){
         saveInt(K.BG_COLOR,color);
+    }
+    
+    // getRestartSongOnPrevButton
+    public boolean getRestartSongOnPrev(){
+        return getBool(K.RESTART_SONG_ON_PREV, true);
     }
     
     //primary text color

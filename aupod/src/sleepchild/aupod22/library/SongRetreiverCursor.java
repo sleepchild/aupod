@@ -16,9 +16,9 @@ public class SongRetreiverCursor
     }
     
     public static List<SongItem> get(Context ctx){
-        if(ctx==null){return null;}
         
         List<SongItem> sitems = new ArrayList<>();
+        if(ctx==null){return sitems;}
         
         Uri suri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
@@ -32,7 +32,7 @@ public class SongRetreiverCursor
           sortOrder);
         
         if(c==null || c.getCount() ==0){
-            return null;
+            return sitems;
         }
         c.moveToFirst();
         

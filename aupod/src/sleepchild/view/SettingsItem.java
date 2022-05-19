@@ -33,7 +33,7 @@ public class SettingsItem extends LinearLayout
         String textStr =  a.getString(R.styleable.SettingsItem_text);
         int textCol = a.getColor(R.styleable.SettingsItem_textColor,0);
         if(textCol==0){
-            textCol = Util.getColor("#ffffff");
+            textCol = ctx.getResources().getColor(R.color.text);
         }
         setText(textStr);
         setTextColor(textCol);
@@ -41,7 +41,7 @@ public class SettingsItem extends LinearLayout
         Drawable d = a.getDrawable(R.styleable.SettingsItem_icon);
         int iconCol = a.getColor(R.styleable.SettingsItem_iconColor,0);
         if(iconCol==0){
-            iconCol = Util.getColor("#ffffff");
+            iconCol = textCol;
         }
         setIcon(d);
         setIconColor(iconCol);

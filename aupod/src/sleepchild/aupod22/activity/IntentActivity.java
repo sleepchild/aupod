@@ -19,14 +19,13 @@ public class IntentActivity extends BaseActivity{
         Intent i = getIntent();
         String path = clean(i.getDataString());
         //
-        AudioService.playFromIntent(path);
+        AudioService.playFromIntent(getApplicationContext(), path);
         
         //finish();
     }
 
-    String clean(String str){
-        String cstr = str.replaceAll("%20"," ");
-        //
+    private String clean(String str){
+        String cstr = str.replace("%20"," ");
         return cstr;
     }
     //

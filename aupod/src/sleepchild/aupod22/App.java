@@ -13,7 +13,7 @@ public class App
     
     private AudioService aupod;
     
-    public MainActivity mainactt;
+    private MainActivity mainactt;
     
     private static Handler handle = new Handler(Looper.getMainLooper());
     
@@ -36,6 +36,24 @@ public class App
             }
         }
         return inst;
+    }
+    
+    public void setMainActivity(MainActivity act){
+        mainactt = act;
+    }
+    
+    public void toast(String msg){
+        if(mainactt!=null){
+            mainactt.toast(msg);
+        }
+    }
+    
+    public MainActivity getMainActivity(){
+        return mainactt;
+    }
+    
+    public static String getAppDirectory(){
+        return "/sdcard/.sleepchild/aupod/";
     }
     
     public static void runInBackground(Runnable task){

@@ -10,20 +10,26 @@ import sleepchild.aupod22.models.*;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import sleepchild.aupod22.service.*;
+import android.app.*;
+import android.widget.ActionMenuView.*;
 
 public class SearchPanel implements SearchHelper.ResultCallback
 {
     MainActivity act;
-    LinearLayout searchPanel;
     EditText input;
     ListView list8;
     SearchResutlAdapter adaptor;
     List<SongItem> songlist=new ArrayList<>();
+    Dialog dlg;
+    OnSearchResultItemClickListener ocl;
     
-    public SearchPanel(MainActivity act){
-        this.act = act;
-        searchPanel = (LinearLayout) act.findViewById(R.id.activity_main_searchpanel);
-        input = (EditText) act.vid(R.id.activity_main_search_input);
+    public SearchPanel(MainActivity a, OnSearchResultItemClickListener l){
+        this.act = a;
+        this.ocl = l;
+        dlg = new Dialog(a);
+        dlg.setContentView(R.layout.dlg_searchpanel);
+        
+        input = (EditText) dlg.findViewById(R.id.searchpanel_input);
         input.addTextChangedListener(new TextWatcher(){
             @Override
             public void beforeTextChanged(CharSequence p1, int p2, int p3, int p4)
@@ -42,15 +48,25 @@ public class SearchPanel implements SearchHelper.ResultCallback
             {
                 String q = input.getText().toString();
                 if(!q.isEmpty()){
-                    SearchHelper.serch(q, songlist, SearchPanel.this);
+                    SearchHelper.get().search(q, songlist, SearchPanel.this);
                 }else{
                     adaptor.clear();
                 }
             }
         });
-        list8 = (ListView) act.findViewById(R.id.activity_main_search_list8);
-        adaptor = new SearchResutlAdapter(act);
+        list8 = (ListView) dlg.findViewById(R.id.searchpanel_list8);
+        list8.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            public void onItemClick(AdapterView av, View v, int pos, long p4){
+                SearchResult res = adaptor.getItem(pos);
+                if(ocl!=null){
+                    ocl.onSearchResultItemClick(res.si);
+                }
+                
+            }
+        });
+        adaptor = new SearchResutlAdapter(a);
         list8.setAdapter(adaptor);
+        
     }
     
     public void setSongslist(List<SongItem> list){
@@ -62,23 +78,29 @@ public class SearchPanel implements SearchHelper.ResultCallback
         adaptor.update(list);
     }
     
-    public void show(){
-        searchPanel.setVisibility(View.VISIBLE);
-        this.act.showKeyboard(input);
+    public void show(List<SongItem> list){
+        input.setText("");
+        adaptor.clear();
+        setSongslist(list);
+        dlg.show();
+        dlg.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        dlg.getWindow().setBackgroundDrawable(null);
+        input.postDelayed(new Runnable(){
+            public void run(){
+                act.showKeyboard(input); 
+            }
+        },10);
+        
     }
     
     public void hide(){
-        searchPanel.setVisibility(View.GONE);
-        adaptor.clear();
         input.setText("");
-    }
-    
-    public boolean isVisible(){
-        return searchPanel.getVisibility()==View.VISIBLE;
+        adaptor.clear();
+        dlg.dismiss();
     }
     
     //
-    private class SearchResutlAdapter extends BaseAdapter implements View.OnClickListener{
+    private class SearchResutlAdapter extends BaseAdapter{
 
         private LayoutInflater inf;
         private List<SearchResult> resultlist = new ArrayList<>();
@@ -103,7 +125,7 @@ public class SearchPanel implements SearchHelper.ResultCallback
         }
 
         @Override
-        public Object getItem(int pos)
+        public SearchResult getItem(int pos)
         {
             return this.resultlist.get(pos);
         }
@@ -119,57 +141,20 @@ public class SearchPanel implements SearchHelper.ResultCallback
         public View getView(int pos, View v, ViewGroup p3)
         {
             SearchResult res = resultlist.get(pos);
-            SongItem si = (SongItem) res.obj;
+            SongItem si = res.si;
             
             v= inf.inflate(R.layout.songlist_item, null, false);
             TextView t = (TextView) v.findViewById(R.id.songlist_itemTitle);
             t.setText(res.title);
             TextView a = (TextView) v.findViewById(R.id.songlist_itemArtist);
-            a.setText(si.artist+" | "+si.album);
+            a.setText(si.artist);//+" | "+si.album);
             
-            switch(res.type){
-                case 0: //title
-                    //
-                    //SongItem si = (SongItem) res.obj;
-                    ImageView ic = (ImageView) v.findViewById(R.id.songlist_item_albumart);
-                    if(si.icon!=null){
-                        ic.setBackground(new BitmapDrawable(si.icon));
-                    }
-                    break;
-                case 1:// artist
-                    v.setBackgroundColor(Color.parseColor("#a000ff99"));
-                    break;
-                case 2: // album
-                    v.setBackgroundColor(Color.parseColor("#ab4500"));
-                    //a.setText(si.artist +" - "+si.album);
-                    
-                    break;
-            }
-            
-            
-            v.setTag(res);
-            v.setOnClickListener(SearchResutlAdapter.this);
             return v;
-        }
-
-        @Override
-        public void onClick(View v){
-            SearchResult sr = (SearchResult) v.getTag();
-            switch(sr.type){
-                case 0:
-                    //
-                    break;
-                case 1:
-                    //
-                    break;
-                case 2:
-                    //
-                    break;
-            }
-           // SongItem si = (SongItem) sr.obj;
-            //aupod.playSong(si);
-        }
+        }        
         
-        
+    }
+    
+    public static interface OnSearchResultItemClickListener{
+        public void onSearchResultItemClick(SongItem si);
     }
 }

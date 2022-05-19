@@ -1,4 +1,4 @@
-package sleepchild.view;
+package sleepchild.view.fastscroll;
 
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -15,6 +15,7 @@ import android.widget.ListView;
 import android.widget.*;
 import sleepchild.aupod22.*;
 import android.graphics.drawable.*;
+import android.graphics.*;
 
 
 public class FastScrollListView extends ListView{
@@ -58,18 +59,31 @@ public class FastScrollListView extends ListView{
         thumbRect = new Rect(0,0, thumbWidth, thumbHeight);
 
         int tc = getContext().getResources().getColor(R.color.color2);
-        thumb = new ColorDrawable(tc);
-       // tc = Color.parseColor("#a0204077");
-        tc = Color.argb(100,
-            Color.red(tc),
-            Color.green(tc),
-            Color.blue(tc)
-        );
         
-        cat = new BeanDrawable(tc, Color.WHITE);
+        thumb = new ColorDrawable(tc);
+        
+        cat = new BeanDrawable(shade(tc), Color.WHITE);
         
         hideThumb();        
         //
+    }
+    
+    public void setThumbColor(int color){
+        thumb.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+        cat.setBackgroundColor(shade(color));
+    }
+    
+    int shade(int col){
+        return Color.argb(
+            100,
+            Color.red(col),
+            Color.green(col),
+            Color.blue(col));
+    }
+    
+    public void setThumbTextColor(int color){
+        //
+        cat.setTextColor(color);
     }
 
     public void setThumbHeight(int height){
@@ -310,33 +324,31 @@ public class FastScrollListView extends ListView{
         showThumb();
         hideThumb();
         
-        gd();
+        getSelectedItemText();
     }
     
-    void gd(){
-        //int p = indexOfChild( getSelectedView());
+    private void getSelectedItemText(){
         String txt = getScrollText(sb);
-        
         if(txt!=null){
             cat.setText(txt);
         }
     }
     
     public String getScrollText(int pos){
-        if(gt!=null){
-            return gt.ogt(pos);
+        if(textListener!=null){
+            return textListener.getItemText(pos);
         }
         return  null;
     }
     
     public void setOgtl(GT l){
-        gt = l;
+        textListener = l;
     }
     
-    GT gt;
+    private GT textListener;
     
     public interface GT{
-        public String ogt(int pos);
+        public String getItemText(int pos);
     }
 
     private void showThumb(){

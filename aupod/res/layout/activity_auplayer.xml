@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<sleepchild.view.ContainerLayout
+<RelativeLayout
+    android:id="@+id/root"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -16,13 +17,13 @@
 
             <LinearLayout
                 android:id="@+id/auplayer_btn_back"
-                android:onClick="onButton"
                 android:orientation="vertical"
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
                 android:gravity="center">
 
                 <sleepchild.view.TintedImageView
+                    android:id="@+id/au1"
                     android:clickable="false"
                     android:layout_width="26dp"
                     android:layout_height="26dp"
@@ -32,7 +33,6 @@
 
             <LinearLayout
                 android:id="@+id/auplayer_btn_options"
-                android:onClick="onButton"
                 android:orientation="vertical"
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
@@ -40,10 +40,11 @@
                 android:gravity="center">
 
                 <sleepchild.view.TintedImageView
+                    android:id="@+id/au2"
                     android:clickable="false"
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:background="@drawable/ic_more_vert_black_24dp"/>
+                    android:background="@drawable/ic_more"/>
 
             </LinearLayout>
 
@@ -75,20 +76,27 @@
                 android:layout_height="match_parent"
                 android:id="@+id/layout3LinearLayout1">
 
-                <LinearLayout
+                <RelativeLayout
                     android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.0"
                     android:padding="20dp">
 
+                    <!--<View
+                        android:id="@+id/auplayer_iv_art_b"
+                        android:background="@drawable/fill"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"/>-->
+                    
+                    <!--ivey target-->
                     <ImageView
                         android:id="@+id/auplayer_iv_art"
-                        android:src="@drawable/fallback_cover"
+                        android:src="@drawable/cover_f"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"/>
 
-                </LinearLayout>
+                </RelativeLayout>
 
                 <LinearLayout
                     android:orientation="vertical"
@@ -100,7 +108,7 @@
                         android:id="@+id/auplayer_tv_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="If I Were You"
+                        android:text="Title"
                         android:background="@color/pluto"
                         android:textColor="@color/text"
                         android:textSize="20sp"
@@ -112,7 +120,7 @@
                         android:id="@+id/auplayer_tv_artist"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sirens"
+                        android:text="Artist"
                         android:textColor="@color/text"
                         android:textSize="16sp"
                         android:background="@color/pluto"
@@ -167,23 +175,22 @@
 
                 <LinearLayout
                     android:id="@+id/auplayer_btn_prev"
-                    android:onClick="onButton"
                     android:orientation="vertical"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:padding="15dp">
 
                     <sleepchild.view.TintedImageView
-                            android:clickable="false"
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/ic_prev"/>
+                        android:id="@+id/au3"
+                        android:clickable="false"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:background="@drawable/ic_prev"/>
 
                 </LinearLayout>
 
                 <sleepchild.view.TintedImageView
                     android:id="@+id/auplayer_btn_playpause"
-                    android:onClick="onButton"
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:background="@drawable/ic_play"
@@ -192,13 +199,13 @@
 
                 <LinearLayout
                     android:id="@+id/auplayer_btn_next"
-                    android:onClick="onButton"
                     android:orientation="vertical"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:padding="15dp">
 
                     <sleepchild.view.TintedImageView
+                        android:id="@+id/au4"
                         android:clickable="false"
                         android:layout_width="34dp"
                         android:layout_height="34dp"
@@ -211,5 +218,6 @@
         </LinearLayout>
 
     </LinearLayout>
-
-</sleepchild.view.ContainerLayout>
+    
+</RelativeLayout>
+<!--</sleepchild.view.ContainerLayout>-->

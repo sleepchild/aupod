@@ -6,7 +6,6 @@ import android.widget.*;
 import android.view.*;
 import android.app.*;
 import sleepchild.aupod22.models.SongItem;
-import sleepchild.aupod22.activity.TagEditorActivity;
 import sleepchild.aupod22.R;
 import sleepchild.aupod22.*;
 import sleepchild.aupod22.activity.*;
@@ -96,7 +95,7 @@ public class SongOptions implements View.OnClickListener
                     //
                     break;
                 case "editfiletags":
-                    TagEditorActivity.start(ctx, si);
+                    //
                     break;
                 case "deletesong":
                     new ConfirmDeleteDialog(ctx, si).show();

@@ -13,6 +13,7 @@ import sleepchild.aupod22.activity.*;
 import sleepchild.aupod22.*;
 import sleepchild.aupod22.library.*;
 import sleepchild.view.*;
+import sleepchild.aupod22.utils.*;
 
 public class SongListAdaptor extends BaseAdapter
 {
@@ -21,10 +22,12 @@ public class SongListAdaptor extends BaseAdapter
     List<SongItem> songList = new ArrayList<>();
     MainActivity ctx;
     SongItem currentSong;
+    ThemeManager.Theme theme;
 
     public SongListAdaptor(MainActivity ctx){
         this.ctx = ctx;
         inf = LayoutInflater.from(ctx);
+        //theme = ThemeManager.get().getTheme();
     }
 
     public void update(List<SongItem> list){
@@ -36,6 +39,11 @@ public class SongListAdaptor extends BaseAdapter
         //
         this.currentSong = songitem;
         notifyDataSetChanged();
+    }
+    
+    public void setTheme(ThemeManager.Theme theme){
+        this.theme = theme;
+        //notifyDataSetChanged();
     }
 
     public int getPos(SongItem si){
@@ -71,46 +79,65 @@ public class SongListAdaptor extends BaseAdapter
         View v = inf.inflate(R.layout.songlist_item, null, false);
         TextView title = (TextView) v.findViewById(R.id.songlist_itemTitle);
         title.setText(item.title);
+        title.setTextColor(theme.text);
         //
         TextView artist = (TextView) v.findViewById(R.id.songlist_itemArtist);
         artist.setText(item.artist);
+        artist.setTextColor(theme.text);
         //
         final ImageView art = (ImageView) v.findViewById(R.id.songlist_item_albumart);
         if(item.icon!=null){
             art.setBackgroundDrawable(new BitmapDrawable(ctx.getResources(),item.icon));
         }else{
-            
-            //*
-            SongInfoUpdater.updateSI(item, new SongInfoUpdater.ResultCallback(){
-                public void onresult(){
-                    if(item.icon!=null){
-                        art.setBackgroundDrawable(new BitmapDrawable(ctx.getResources(),item.icon));
-                    }
-                }
-            });
-            //*/
-            
+            //art.setBackgroundResource(R.color.black);
+            art.setImageBitmap(BitmapUtils.tint(ctx.getResources(), R.drawable.cover_f, theme.icon));
         }
             
-        ((View) v.findViewById(R.id.songlist_item_more)).setOnClickListener(new View.OnClickListener(){
+        v.findViewById(R.id.songlist_item_more).setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
                 new SongOptions(ctx, item).show();
             }
         });
+        v.setBackgroundColor(theme.background);
         
-        TintedImageView mv = (TintedImageView) v.findViewById(R.id.songlist_itemsleepchild_view_T2);
+        TintedImageView more_icon = (TintedImageView) v.findViewById(R.id.songlist_items_more_icon);
+        more_icon.setTint(theme.icon);
         
         if(currentSong!=null && currentSong.equals(item)){
-            v.setBackgroundResource(R.color.color2);
-            title.setTextColor(ctx.getColor(R.color.pluto));
-            artist.setTextColor(ctx.getColor(R.color.pluto));
+            v.setBackgroundColor(theme.text);
+            title.setTextColor(theme.background);
+            artist.setTextColor(theme.background);
             
-            mv.setTint(ctx.getColor(R.color.pluto));
-        }else{
-            //mv.setTint(ctx.getColor(R.color.white));
+            more_icon.setTint(theme.background);
+            
+            if(cj.color!=theme.background){
+            App.runInBackground(new Runnable(){
+                public void run(){
+                    final Bitmap b = BitmapUtils.tint(ctx.getResources(), R.drawable.cover_f, theme.background);
+                    if(b!=null){
+                        App.runInUiThread(new Runnable(){
+                            public void run(){
+                                art.setImageBitmap(b);
+                                cj.bmp = b;
+                                cj.color = theme.background;
+                            } 
+                        });
+                    }
+                }
+            });
+            }else{
+                art.setImageBitmap(cj.bmp);
+            }
         }
+        
         v.setTag(item);
         return v;
     }
+    
+    class J{
+        Bitmap bmp;
+        int color;
+    }
+    J cj = new J();
 
 }

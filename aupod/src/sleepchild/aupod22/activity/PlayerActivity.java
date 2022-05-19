@@ -16,41 +16,44 @@ import sleepchild.aupod22.activity.*;
 import sleepchild.aupod22.*;
 import sleepchild.aupod22.library.*;
 import sleepchild.aupod22.service.*;
+import sleepchild.aupod22.ThemeManager.*;
 
-public class PlayerActivity extends BaseActivity implements AudioService.ConnectionListener,
-APEvents.PlaybackStateListener
+public class PlayerActivity extends BaseActivity implements 
+  AudioService.ConnectionListener,
+  APEvents.PlaybackStateListener
 {
 
-    TextView currentTitle, currentArtist;
-    TextView trackTimeCurrent, trackTimeDuration;
-    LinearLayout art2Background;
-    ImageView currentArt;
-    AudioService aupod;
-    TintedImageView playpauseIcon;
-    SeekBar seeker;
-    Runnable seekerTick;
-    boolean seektouch;
-    Handler handle;
-    SongItem mCurrentSong;
+    private TextView currentTitle, currentArtist;
+    private TextView trackTimeCurrent, trackTimeDuration;
+    private LinearLayout art2Background;
+    private ImageView currentArt;
+    private AudioService aupod;
+    private TintedImageView playpauseIcon;
+    private SeekBar seeker;
+    private Runnable seekerTick;
+    private boolean seektouch;
+    private Handler handle;
+    //private SongItem mCurrentSong;
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState){
+        setThemeable(true);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auplayer);
         init();
+        
     }
 
-    void init(){
+    private void init(){
         handle = new Handler();
-        currentTitle = (TextView) findViewById(R.id.auplayer_tv_title);
-        currentArtist = (TextView) findViewById(R.id.auplayer_tv_artist);
-        art2Background = (LinearLayout) findViewById(R.id.aupalyer_iv_art2_background);
-        currentArt = (ImageView) findViewById(R.id.auplayer_iv_art);
-        playpauseIcon = (TintedImageView) findViewById(R.id.auplayer_btn_playpause);
+        currentTitle = findView(R.id.auplayer_tv_title);
+        currentArtist = findView(R.id.auplayer_tv_artist);
+        art2Background = findView(R.id.aupalyer_iv_art2_background);
+        currentArt = findView(R.id.auplayer_iv_art);
+        playpauseIcon = findView(R.id.auplayer_btn_playpause);
         //
         //*
-        seeker = (SeekBar) findViewById(R.id.aupalyer_seeker);
+        seeker = findView(R.id.aupalyer_seeker);
         seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
                 @Override
                 public void onProgressChanged(SeekBar p1, int pos, boolean touch)
@@ -91,37 +94,45 @@ APEvents.PlaybackStateListener
         };
         //*/
 
-        trackTimeCurrent = (TextView) findViewById(R.id.auplayer_currentpos);
-        trackTimeDuration = (TextView) findViewById(R.id.auplayer_duration);
+        trackTimeCurrent = findView(R.id.auplayer_currentpos);
+        trackTimeDuration = findView(R.id.auplayer_duration);
 
+        //
+        setClickable(R.id.auplayer_btn_playpause);
+        setClickable(R.id.auplayer_btn_prev);
+        setClickable(R.id.auplayer_btn_next);
+        setClickable(R.id.auplayer_btn_options);
+        setClickable(R.id.auplayer_btn_back);
     }
     
     private void updateInfo(){
-        if(aupod==null){
-            return;
-        }
         final SongItem si = aupod.getCurrentSong();
-        if(si==null){
+        if(aupod==null || si==null){
             return;
         }
         
         currentTitle.setText(si.title);
         currentArtist.setText(si.artist);
+        
+        //hideView(R.id.auplayer_iv_art_b);
         if(si.icon!=null){
             currentArt.setImageBitmap(si.icon);
             setLargeArt(si.icon);
         }else{
-            SongInfoUpdater.updateSI(si, new SongInfoUpdater.ResultCallback(){
-                public void onresult(){
-                    if(si.icon!=null){
-                        currentArt.setImageBitmap(si.icon);
-                        setLargeArt(si.icon);
-                    }else{
-                        currentArt.setImageResource(R.drawable.fallback_cover);
-                        art2Background.setBackgroundDrawable(null);
+            App.runInBackground(new Runnable(){
+                public void run(){
+                    final Bitmap bmp = BitmapUtils.tint(ctx.getResources(), R.drawable.cover_f, ThemeManager.getTheme().icon);
+                    if(bmp!=null){
+                        handle.post(new Runnable(){
+                            public void run(){
+                                currentArt.setImageBitmap(bmp);
+                            }
+                        });
                     }
                 }
             });
+            //showView(R.id.auplayer_iv_art_b);
+            //setLargeArt( BitmapFactory.decodeResource(ctx.getResources(), R.drawable.fallback_cover));
         }
         
         if(aupod!=null){
@@ -131,6 +142,10 @@ APEvents.PlaybackStateListener
                 playpauseIcon.setBackgroundResource(R.drawable.ic_play);
             }
         }
+        
+        playpauseIcon.reset();
+        
+        //playpauseIcon.setTint(tm.);
         
         int pos = aupod.getCurrentPosition();
         trackTimeDuration.setText(formatTime((int)si.duration));
@@ -142,7 +157,7 @@ APEvents.PlaybackStateListener
         //
     }
     
-    void setLargeArt(final Bitmap bmp){
+    private void setLargeArt(final Bitmap bmp){
         //art2Background.setBackgroundDrawable(new BitmapDrawable(bmp));
         App.runInBackground(new Runnable(){
             public void run(){
@@ -169,7 +184,7 @@ APEvents.PlaybackStateListener
         handle.removeCallbacks(seekerTick);
     }
     
-    String formatTime(int time){
+    private String formatTime(int time){
         //String t = "";
         int hrs = (int) (time/ (1000*60*60)) % 60;
         int min = (int) ( time/ (1000*60)) % 60;
@@ -181,14 +196,15 @@ APEvents.PlaybackStateListener
         return d(hrs)+":"+d(min)+":"+d(sec);
     }
 
-    String d(int t){
+    private String d(int t){
         if(t<10){
             return "0"+t;
         }
         return ""+t;
     }
 
-    public void onButton(View v){
+    @Override
+    public void onClick(View v){
         int id = v.getId();
         switch(id){
             case R.id.auplayer_btn_playpause:
@@ -224,20 +240,20 @@ APEvents.PlaybackStateListener
 
     @Override
     public void onPlaybackStart(){
-        playpauseIcon.setBackgroundResource(R.drawable.ic_pause);
+        playpauseIcon.setBackgroundResourceAndReset(R.drawable.ic_pause);
         startSeeker();
     }
 
     @Override
     public void onPlaybackPause(){
-        playpauseIcon.setBackgroundResource(R.drawable.ic_play);
+        playpauseIcon.setBackgroundResourceAndReset(R.drawable.ic_play);
         stopSeeker();
     }
 
     @Override
     public void onPlaybackStop(){
         updateInfo();
-        playpauseIcon.setBackgroundResource(R.drawable.ic_play);
+        playpauseIcon.setBackgroundResourceAndReset(R.drawable.ic_play);
         stopSeeker();
     }
 
@@ -245,6 +261,45 @@ APEvents.PlaybackStateListener
     public void onSongChanged(SongItem newsong){
         updateInfo();
     }
+
+    ThemeManager.Theme theme;
+    
+    // todo: this takes too long
+    @Override
+    protected void onApplyTheme(ThemeManager.Theme theme)
+    {
+        super.onApplyTheme(theme);
+        this.theme = theme;
+        //
+        themer.dispatchMessage(new Message());
+    }
+    
+    Handler themer = new Handler(){
+        @Override
+        public void handleMessage(Message msg)
+        {
+            super.handleMessage(msg);
+            //
+            setTextViewsColor(theme.text,
+                              trackTimeCurrent,
+                              trackTimeDuration,
+                              currentArtist,
+                              currentTitle);
+            //
+            currentTitle.setBackgroundColor(theme.background);
+            currentArtist.setBackgroundColor(theme.background);
+            //
+            setTintablesTint(theme.icon,
+                             R.id.au1,
+                             R.id.au2,
+                             R.id.au3,
+                             R.id.au4,
+                             R.id.auplayer_btn_playpause);
+            //
+            seeker.getProgressDrawable().setColorFilter(theme.icon, PorterDuff.Mode.SRC_ATOP);
+            seeker.getThumb().setColorFilter(theme.icon, PorterDuff.Mode.SRC_ATOP);
+        }
+     };
     
     @Override
     protected void onPause(){

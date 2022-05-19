@@ -83,6 +83,11 @@ public class RoundedLinearLayout extends LinearLayout
         super.setBackgroundColor(color);
     }
     
+    public void setBorderColor(int color){
+        colorBorder = color;
+        borderPaint.setColor(color);
+        invalidate();
+    }
     
 
     @Override

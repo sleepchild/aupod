@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="64dp">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="#FFFFFF">
+
+        <ImageView
+            android:id="@+id/ant_icon"
+            android:layout_width="64dp"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+        
+        <ImageView
+            android:id="@+id/ant_icon_div"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#CECECE"
+            android:scaleType="fitXY"/>
+        
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:padding="4dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/ant_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="16sp"
+                    android:textColor="#000000"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:layout_marginLeft="5dp"/>
+
+                <TextView
+                    android:id="@+id/ant_artist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:layout_weight="1.0"
+                    android:textColor="#000000"
+                    android:textSize="16sp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="34dp"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp">
+
+                <!--prev--> 
+                <LinearLayout
+                    android:id="@+id/ant_btn_prev"
+                    android:layout_width="48dp"
+                    android:gravity="center"
+                    android:layout_height="match_parent">
+                    <ImageView
+                        android:clickable="false"
+                        android:src="@drawable/ic_prev"
+                        android:scaleType="fitXY"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"/>
+                </LinearLayout>
+
+                <!--play-->
+                <LinearLayout
+                    android:id="@+id/ant_btn_playpause"
+                    android:layout_width="48dp"
+                    android:gravity="center"
+                    android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ant_btn_playpause_icon"
+                        android:clickable="false"
+                        android:src="@drawable/ic_play"
+                        android:scaleType="fitXY"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"/>
+                </LinearLayout>
+
+                <!--next-->
+                <LinearLayout
+                    android:id="@+id/ant_btn_next"
+                    android:layout_width="48dp"
+                    android:gravity="center"
+                    android:layout_height="match_parent">
+                    <ImageView
+                        android:clickable="false"
+                        android:src="@drawable/ic_next"
+                        android:scaleType="fitXY"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"/>
+                </LinearLayout>
+
+                <!--exit-->
+                <LinearLayout
+                    android:id="@+id/ant_btn_exit"
+                    android:layout_width="48dp"
+                    android:gravity="center"
+                    android:layout_height="match_parent">
+                    <ImageView
+                        android:clickable="false"
+                        android:src="@drawable/ic_close"
+                        android:scaleType="fitXY"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
+
+

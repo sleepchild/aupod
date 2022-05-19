@@ -20,11 +20,15 @@ import sleepchild.aupod22.*;
 import sleepchild.aupod22.utils.*;
 import sleepchild.aupod22.library.*;
 import sleepchild.aupod22.service.*;
+import sleepchild.aupod22.ThemeManager.*;
+import sleepchild.aupod22.menu.*;
 
 public class MainActivity extends BaseActivity implements 
     AudioService.ConnectionListener, 
     APEvents.PlaybackStateListener, 
-    APEvents.SongListUpdateListener{
+    APEvents.SongListUpdateListener,
+    SearchPanel.OnSearchResultItemClickListener
+{
     
     AudioService aupod;
     ImageView currentImage;
@@ -41,9 +45,15 @@ public class MainActivity extends BaseActivity implements
     SongsQueueTab sqTab;
 
     SearchPanel searchPanel;
+    
+    List<SongItem> songslist;
+    
+    Handler handle = new Handler();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setThemeable(true);
+        App.get().setMainActivity(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //
@@ -53,15 +63,15 @@ public class MainActivity extends BaseActivity implements
     //*
     private void init(){
         //
-        currentsongTitle = (TextView) findViewById(R.id.activity_main_tv_title);
-        currentsongArtist = (TextView) findViewById(R.id.activity_main_tv_artist);
-        currentImage = (ImageView) findViewById(R.id.activity_main_iv_currentimage);
-        btnPlayPause = (TintedImageView)findViewById(R.id.activity_main_iv_playpause);
+        currentsongTitle = findView(R.id.activity_main_tv_title);
+        currentsongArtist = findView(R.id.activity_main_tv_artist);
+        currentImage = findView(R.id.activity_main_iv_currentimage);
+        btnPlayPause = findView(R.id.activity_main_iv_playpause);
         btnPlayPause.setBackgroundResource(R.drawable.ic_play);
         
-        searchPanel = new SearchPanel(this);
+        searchPanel = new SearchPanel(this, this);
 
-        tabview = (TabView) findViewById(R.id.activity_main_tabview1);
+        tabview = findView(R.id.activity_main_tabview1);
 
         songsTab = new SongsListTab(this);
         sqTab = new SongsQueueTab(this);
@@ -69,23 +79,47 @@ public class MainActivity extends BaseActivity implements
         albumsTab = new AlbumsTab(this);
         playlistTab = new PlaylistsTab(this);
 
-        //tabview.addTab("QUEUE", sqTab);
+        tabview.addTab("QUEUE", sqTab);
         tabview.addTab("SONGS", songsTab);
         tabview.addTab("ARTIST", artistTab);
         tabview.addTab("ALBUMS", albumsTab);
         tabview.addTab("PLAYLIST",playlistTab);
-
+        
+        //tabview.showTab(sqTab);
         tabview.showTab(songsTab);
+        //
+    }
+
+    
+    @Override
+    protected void onApplyTheme(ThemeManager.Theme theme){
+        super.onApplyTheme(theme);
+        tabview.onApplyTheme(theme);
+        
+        setTextViewsColor(theme.text,
+            R.id.activity_main_tv_artist,
+            R.id.activity_main_tv_title,
+            R.id.title);
+            
+        setTintablesTint(theme.icon,
+            R.id.au1,
+            R.id.au2,
+            R.id.au3,
+            R.id.activity_main_iv_playpause
+        );
+        
+        RoundedLinearLayout r1 = findView(R.id.rr1);
+        r1.setBorderColor(theme.dividers);
     }
 
     public void onClick(View v){
         int id = v.getId();
         switch(id){
             case R.id.activity_main_btn_showsettings:
-                startActivity(SettingsActivity.class);
+                new MainActOptions(this).show();
                 break;
             case R.id.activity_main_btn_search:
-                searchPanel.show();
+                searchPanel.show(songslist);
                 break;
             case R.id.activity_main_btn_playpause:
                 if(aupod!=null){
@@ -107,16 +141,21 @@ public class MainActivity extends BaseActivity implements
     @Override
     public void onAudioServiceConnect(AudioService service){
         aupod = service;
-        APEvents.getInstance().addPlaybackEventListener(this);
         aupod.getSongsList();
+        if(aupod.isPlaying()){
+            onPlaybackStart();
+        }
     }
 
-    int t=1;
+    //int t=1;
     @Override
     public void onSongsListUpdated(List<SongItem> list){
         songsTab.update(list);
-       // toast("onSongsListUpdated:"+t);
-        t++;
+        albumsTab.update(list);
+        //
+        songslist = list;
+        //toast("onSongsListUpdated:"+t);
+        //t++;//
         if(aupod!=null){
             SongItem si = aupod.getCurrentSong();
             if(si!=null){
@@ -130,23 +169,35 @@ public class MainActivity extends BaseActivity implements
     }
     
     @Override
-    public void onPlaybackStart()
-    {
-         btnPlayPause.setBackgroundResource(R.drawable.ic_pause);
-         btnPlayPause.reset();
+    public void onPlaybackStart(){
+         handle.postDelayed(new Runnable(){
+             public void run(){
+                 btnPlayPause.setBackgroundResource(R.drawable.ic_pause);
+                 btnPlayPause.reset();
+             }
+         },10);
     }
 
     @Override
     public void onPlaybackPause()
     {
-        btnPlayPause.setBackgroundResource(R.drawable.ic_play);
-        btnPlayPause.reset();
+        handle.postDelayed(new Runnable(){
+            public void run(){
+                btnPlayPause.setBackgroundResource(R.drawable.ic_play);
+                btnPlayPause.reset();
+            }
+        }, 10);
     }
 
     @Override
     public void onPlaybackStop()
     {
-        // TODO: Implement this method
+        handle.postDelayed(new Runnable(){
+            public void run(){
+                btnPlayPause.setBackgroundResource(R.drawable.ic_play);
+                btnPlayPause.reset();
+            }
+        }, 10);
     }
 
     @Override
@@ -156,27 +207,29 @@ public class MainActivity extends BaseActivity implements
         if(si.icon!=null){
             currentImage.setBackgroundDrawable(new BitmapDrawable(si.icon));
         }else{
-            currentImage.setBackgroundResource(R.drawable.fallback_cover);
-            SongInfoUpdater.updateSI(si, new SongInfoUpdater.ResultCallback(){
-                @Override
-                public void onresult(){
-                    if(si.icon!=null){
-                        currentImage.setBackgroundDrawable(new BitmapDrawable(si.icon));
-                    }else{
-                        currentImage.setBackgroundResource(R.drawable.fallback_cover);
-                    }
-                }
-            });
+            currentImage.setImageBitmap(BitmapUtils.tint(ctx.getResources(), R.drawable.cover_f, ThemeManager.getTheme().icon));
         }
         //
         songsTab.setCurrent(si);
+    }
+
+    @Override
+    public void onSearchResultItemClick(SongItem si)
+    {
+        if(aupod!=null){
+            aupod.playSong(si);
+        }
+    }
+    
+    void unsubscribe(){
+        APEvents.getInstance().removePlaybackEventListener(this);
+        APEvents.getInstance().removeSongsListUpdateListener(this);
     }
     
     @Override
     protected void onPause(){
         //
-        APEvents.getInstance().removePlaybackEventListener(this);
-        APEvents.getInstance().removeSongsListUpdateListener(this);
+        unsubscribe();
         super.onPause();
     }
 
@@ -185,18 +238,24 @@ public class MainActivity extends BaseActivity implements
         super.onResume();
         APEvents.getInstance().addPlaybackEventListener(this);
         APEvents.getInstance().addSongsListUpdateListener(this);
-        //SongLibrary.getInstance().update(this);
+//        //SongLibrary.getInstance().update(this);
         AudioService.connect(this, this);
         //
     }
 
     @Override
-    public void onBackPressed() {
-        if(searchPanel.isVisible()){
-            searchPanel.hide(); 
-        }else{
-            super.onBackPressed();
+    protected void onDestroy()
+    {
+        unsubscribe();
+        if(aupod!=null){
+            aupod.onActivityDestroyed();
         }
+        super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 
 

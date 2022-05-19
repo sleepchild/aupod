@@ -86,13 +86,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
-                    <LinearLayout
+                    <!--<LinearLayout
                         android:id="@+id/tageditor_art"
                         android:onClick="onButton"
                         android:orientation="vertical"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@drawable/fallback_cover"/>
+                        android:background="@drawable/cover"/>-->
 
                 </RelativeLayout>
 

@@ -13,7 +13,6 @@
         android:layout_height="40dp"
         android:layout_marginBottom="4dp"/>
     
-    <!--todo: use own layout-->
     <sleepchild.view.RoundedLinearLayout
         android:id="@+id/customview_tabview_tabcontainer"
         android:orientation="vertical"

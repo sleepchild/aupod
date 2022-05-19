@@ -12,23 +12,13 @@ import android.renderscript.RenderScript;
 import android.renderscript.*;
 import java.util.*;
 import java.io.*;
+import sleepchild.aupod22.*;
 
 public class Utils
 {
+    private static final String TAG ="Utils";
     public static void toast(Context ctx, String msg){
         Toast.makeText(ctx, msg, 500).show();
-    }
-
-    public static void log(String msg){
-        try
-        {
-            FileOutputStream out = new FileOutputStream("/sdcard/aupodlog.txt");
-            out.write(msg.getBytes());
-            out.flush();
-            out.close();
-        }
-        catch (FileNotFoundException e)
-        {}catch(IOException e){}
     }
 
     public static Drawable bmpToDrawable(Context ctx, Bitmap bmp){
@@ -69,5 +59,58 @@ public class Utils
             return "0"+t;
         }
         return ""+t;
+    }
+    
+    public static void touch(File path, String textContent){
+        touch(path.getAbsolutePath(), textContent.getBytes());
+    }
+    
+    public static void touch(File path, byte[] data){
+        touch(path, data);
+    }
+    
+    public static void touch(String path, String textContent){
+        touch(path, textContent.getBytes());
+    }
+    
+    public static void touch(String path, byte[] data){
+        try{
+            FileOutputStream out = new FileOutputStream(path);
+            out.write(data);
+            out.flush();
+            out.close();
+        }
+        catch (FileNotFoundException e){
+            XApp.logConsumableException(TAG, e);
+        }catch(IOException ioe){
+            XApp.logConsumableException(TAG, ioe);
+        }
+    }
+    
+    public static String readTextFile(File file){
+        return readTextFile(file.getAbsolutePath());
+    }
+    
+    public static String readTextFile(String path){
+        String data="";
+        BufferedReader br = null;
+        try{
+            br = new BufferedReader(new FileReader(path));
+            String line;
+            while((line = br.readLine()) != null){
+                data += line + "\n";
+            }
+        }
+        catch (FileNotFoundException e){
+            XApp.logConsumableException(TAG, e);
+        }catch(IOException ioe){
+            XApp.logConsumableException(TAG, ioe);
+        }
+        finally{
+            if (br != null){
+                try{br.close();}catch (IOException e){XApp.logConsumableException(TAG, e);}}
+        }
+        
+        return data;
     }
 }

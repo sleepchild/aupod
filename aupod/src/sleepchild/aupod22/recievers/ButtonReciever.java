@@ -4,6 +4,7 @@ import android.content.*;
 import android.view.*;
 import sleepchild.aupod22.*;
 import sleepchild.aupod22.service.*;
+import sleepchild.aupod22.utils.*;
 
 public class ButtonReciever extends BroadcastReceiver {    
     @Override
@@ -21,6 +22,7 @@ public class ButtonReciever extends BroadcastReceiver {
                                 Intent i = new Intent(ctx, AudioService.class);
                                 i.setAction(AudioService.CMD_MEDIA_BUTTON);
                                 ctx.startService(i);
+                                //Utils.toast(ctx, "a: "+i.getAction());
                             }
                             break;
                     }

@@ -3,32 +3,33 @@ import java.util.*;
 import sleepchild.aupod22.models.*;
 
 public class PlayQueue{
-    private String Qname;
+    
+    private String qname;
+    SongItem selectedSong;
+    List<SongItem> slist;
+    int songIndex=0;
     
     private List<SongItem> songlist = new ArrayList<>();
     
-    public PlayQueue(String name, String songpath){
-        //
+    
+    public PlayQueue(String name, SongItem startSong, List<SongItem> list){
+        qname = name;
     }
     
-    public PlayQueue(String name, SongItem song){
-        //
-    }
-    
-    public PlayQueue(String name, Playlist list){
-        //
-    }
-    
-    public PlayQueue(String name, List<SongItem> list){
-        if(list!=null){
-            //
-        }
+    public SongItem getSelectedSong(){
+        
+        return selectedSong;
     }
     
     public String getName(){
-        return Qname;
+        return qname;
     }
     
+    public void getList(){
+        //
+    }
+    
+    // should this be allowed
     public void rename(String newName){
         //
     }

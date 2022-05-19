@@ -11,6 +11,8 @@ import java.util.*;
 import java.io.*;
 import sleepchild.aupod22.utils.*;
 import sleepchild.aupod22.recievers.*;
+import android.media.session.*;
+import android.widget.*;
 
 public class AudioService extends Service{
 
@@ -33,17 +35,14 @@ public class AudioService extends Service{
     private PowerManager.WakeLock wakelock;
     private ComponentName mediaButtonComponent;
     SPrefs prefs;
-//    private NotificationManager nMgr;
     
     
     private SongItem currentSong;
     private Handler handle = new Handler();
     
-    private boolean restartCurrentOnPrev = false;
+    private boolean restartCurrentOnPrev = true;
     private boolean songset = false;
     boolean recieversRegistered = false;
-    
-    private PlayQueue currentSongQueue;
     
     private List<SongItem> songlist = new ArrayList<>();
     
@@ -57,13 +56,15 @@ public class AudioService extends Service{
         super.onCreate();
         ctx = getApplicationContext();
         prefs = new SPrefs(ctx);
-        App.get().registerAudiosService(this);
+        restartCurrentOnPrev = prefs.getRestartSongOnPrev();
         initMPlayer();
-//        nMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        //
         am = (AudioManager) getSystemService(AUDIO_SERVICE);
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         //
+        App.get().registerAudiosService(this);
+        
     }
 
     @Override
@@ -118,8 +119,14 @@ public class AudioService extends Service{
         ctx.startService(si);
     }
     
-    public static void playFromIntent(String songpath){
+    public static void playFromIntent(Context context, String songpath){
         //
+    }
+    
+    public void onActivityDestroyed(){
+        if(!isPlaying()){
+            cmd_end();
+        }
     }
     
     public void getSongsList(){
@@ -228,6 +235,9 @@ public class AudioService extends Service{
     }
     
     public boolean playNext(){
+        if(songlist.isEmpty()){
+            return false;
+        }
         boolean songChanged=false;
         int idx = songlist.indexOf(currentSong);
         int m = songlist.size()-1;
@@ -245,6 +255,9 @@ public class AudioService extends Service{
     }
     
     public void playPrev(){
+        if(songlist.isEmpty()){
+            return;
+        }
         int idx = songlist.indexOf(currentSong);
         idx--;
         if(idx<0){
@@ -254,11 +267,10 @@ public class AudioService extends Service{
         
         if(restartCurrentOnPrev){
             int ct = mPlayer.getCurrentPosition();
-            if(ct>4000){
+            if(ct>6000){
                 rest=true;
             }
         }
-        
         
         if(rest){
             mPlayer.seekTo(0);
@@ -386,11 +398,13 @@ public class AudioService extends Service{
                         break;
                     }
                 }
-                if(currentSong==null){
+                if(currentSong==null && !songlist.isEmpty()){
                     currentSong = songlist.get(0);
                 }
             }else{
-                currentSong = songlist.get(0);
+                if(!songlist.isEmpty()){
+                    currentSong = songlist.get(0);
+                }
             }
             //
         }
@@ -403,13 +417,13 @@ public class AudioService extends Service{
             }
         }
         
-        //if(listChanged){
+        if(songlist!=null){
             APEvents.getInstance().postSongsListUpdated(songlist);
-        //}
+        }
         //
-       // if(currentSongUpdated){
+        if(currentSong!=null){
             APEvents.getInstance().postSongChangeEvent(currentSong);
-       // }
+        }
     }
     
     private void cmd_start(){
@@ -417,11 +431,24 @@ public class AudioService extends Service{
         if(l!=null){
             l.onAudioServiceConnect(this);
         }
+        // update notification theme
     }
     
     private void cmd_end(){
+        
         stop();
+        stopForeground(false);
+        stopForeground(true);
+        
         mPlayer.release();
+        mPlayer = null;
+        
+        unregisterRecievers();
+        
+        stopSelf();
+        
+        XApp.exit();
+        //
     }
     
     private void requestAudioFocus(){
@@ -435,36 +462,45 @@ public class AudioService extends Service{
         am.abandonAudioFocus(audioFocusListener);
     }
     
+    boolean playingBeforePause=false;
     AudioManager.OnAudioFocusChangeListener audioFocusListener = new AudioManager.OnAudioFocusChangeListener(){
         @Override
         public void onAudioFocusChange(int state){
             switch(state){
                 case AudioManager.AUDIOFOCUS_GAIN:
-                    resume();
+                    //resume();
+                    //
                     break;
                 case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
-                    resume();
+                    //resume();
+                    //
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS:
+                    playingBeforePause = isPlaying();
                     pause();
                     unregisterRecievers();
                     dropAudioFocus();
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                    playingBeforePause = isPlaying();
                     pause();
+                    unregisterRecievers();
+                    dropAudioFocus();
                     break;
             }
         }
     };
     
+    // todo: try everything
     private void registerRecievers(){
         if(recieversRegistered){
-            return;
+            //return;
         }
-        requestAudioFocus();
-        recieversRegistered = true;
-        registerMediaButton();
         aquireWakeLock();
+        requestAudioFocus();
+        registerMediaButton();
+        recieversRegistered = true;
+        //
     }
     
     private void unregisterRecievers(){
@@ -475,41 +511,68 @@ public class AudioService extends Service{
     }
     
     private void registerMediaButton(){
-        mediaButtonComponent = new ComponentName(this, ButtonReciever.class.getName());
-        am.registerMediaButtonEventReceiver(mediaButtonComponent);
+        try{
+            if(mediaButtonComponent == null){
+                mediaButtonComponent = new ComponentName(this, ButtonReciever.class.getName());
+            }
+            am.registerMediaButtonEventReceiver(mediaButtonComponent);
+        }catch(Exception e){}
     }
     
     private void unRegisterMediaButton(){
-        am.unregisterMediaButtonEventReceiver(mediaButtonComponent);
+        try{
+            am.unregisterMediaButtonEventReceiver(mediaButtonComponent);
+        }catch(Exception e){}
     }
     
+    /// headsethook ~~ media button
+    Runnable btnSingle = new Runnable(){
+        public void run(){
+            playPause();
+            btnSinglepress = false;
+        }
+    };
+    
+    boolean btnSinglepress=false;;
+    
     private void handleMediabtn(){
-        playPause();
+        if(btnSinglepress){
+            handle.removeCallbacks(btnSingle);
+            btnSinglepress = false;
+            playNext();
+        }else{
+            btnSinglepress = true;
+            handle.postDelayed(btnSingle, 280);
+        }
     }
     
     private void aquireWakeLock(){
-        if(wakelock!=null){
-            wakelock.acquire();
-        }
+        try{
+            if(wakelock!=null){
+                wakelock.acquire();
+                //Utils.toast(ctx, "wakeful: "+wakelock.isHeld());
+            }
+        }catch(Exception e){}
     }
     
     private void releaseWakeLock(){
-        if(wakelock!=null){
-            if(wakelock.isHeld()){
-                wakelock.release();
+        try{
+            if(wakelock!=null){
+                if(wakelock.isHeld()){
+                    wakelock.release();
+                }
             }
-        }
+        }catch(Exception e){}
     }
     
+    public void updateNotif(){}
+     
     private void showNotification(){
         startForeground(NID, Notific.get(this, currentSong, true));
     }
     
     private void stopNotification(){
-        if(currentSong!=null){
-            startForeground(NID, Notific.get(this, currentSong, false));
-        }
-        stopForeground(false);
+        startForeground(NID, Notific.get(this, currentSong, false));
     }
     
     private void initMPlayer(){

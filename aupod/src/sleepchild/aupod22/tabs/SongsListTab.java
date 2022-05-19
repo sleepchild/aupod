@@ -11,6 +11,9 @@ import sleepchild.aupod22.adapters.*;
 import sleepchild.aupod22.activity.*;
 import sleepchild.view.*;
 import sleepchild.aupod22.service.*;
+import sleepchild.view.fastscroll.*;
+import sleepchild.aupod22.ThemeManager.*;
+import android.graphics.drawable.*;
 
 public class SongsListTab extends Tab
 {
@@ -18,18 +21,19 @@ public class SongsListTab extends Tab
     private SongListAdaptor adapter;
     private SongItem currentSong;
     private FastScrollListView list1;
+    //ThemeManager.Theme theme;
     //MainActivity act;
     
     //*
     public SongsListTab(MainActivity ctx){
         //act = ctx;
-        root = LayoutInflater.from(ctx).inflate(R.layout.list_view, null, false);
+        root = LayoutInflater.from(ctx).inflate(R.layout.default_listview, null, false);
         list1 = (FastScrollListView) root.findViewById(R.id.list_view_list1);
         adapter = new SongListAdaptor(ctx);
         list1.setAdapter(adapter);
         list1.setOgtl(new FastScrollListView.GT(){
             @Override
-            public String ogt(int pos){
+            public String getItemText(int pos){
                 if(pos<0){
                     pos = 0;
                 }else if(pos>=adapter.getCount()){
@@ -49,17 +53,10 @@ public class SongsListTab extends Tab
                         }
                     }
                 }
-                //adapter.getItem(pos);
-              //  if(t.length()>1){
-                   // t = t.substring(0,1);
-               // }
-                return "...";// t.toUpperCase();
+                return "...";
             }
         });
-        //list1.setFastScrollEnabled(true);
-        //list1.setScrollbarFadingEnabled(false);
-        //list1.setFastScrollAlwaysVisible(true);
-        //list1.setScrollBarStyle(R.style.scrollbarstyles);
+        
         list1.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> p1, View v, int pos, long p4){
@@ -79,9 +76,6 @@ public class SongsListTab extends Tab
         
         return "...";  
     }
-    
-   
-    //*/
 
     public void update(List<SongItem> list){
         adapter.update(list);
@@ -118,5 +112,16 @@ public class SongsListTab extends Tab
     public View getView(){
         return root;
     }
+
+    @Override
+    public void onApplyTheme(ThemeManager.Theme theme){
+        if(adapter!=null){
+            adapter.setTheme(theme);
+        }
+        list1.setThumbColor(theme.icon);
+        list1.setThumbTextColor(theme.text);
+        list1.setDivider(new ColorDrawable(theme.dividers));
+    }
+   
 
 }
