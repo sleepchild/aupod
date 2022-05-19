@@ -7,17 +7,16 @@ apk downlaod from the [releases page](https://github.com/sleepchild/aupod/releas
 
 #### screenshots
 
-<img src="https://github.com/sleepchild/aupod/blob/master/screenshot1mainapp.jpg" alt="screenshot main app" style="width:480px; height:853px;"/>
+<img src="https://github.com/sleepchild/aupod/releases/download/20220518/s1.png" alt="screenshot" style="width:120px; height:200px;"/>
 
-<img src="https://github.com/sleepchild/aupod/blob/master/screenshot2fullplayer.jpg" alt="screenshot full player" style="float:left; width:480; height:853px;" />
+<img src="https://github.com/sleepchild/aupod/releases/download/20220518/s2.png" alt="screenshot full player" style="float:left; width:130px; height:203px;" />
+
+<img src="https://github.com/sleepchild/aupod/releases/download/20220518/s3.png" alt="screenshot full player" style="float:left; width:120px; height:203px;" />
 
 ## What's not Working
  Alot of things.
- - artist tab
- - album tab
- - playlist
- - play queue
- 
+ - literally everything.
+
  I will fix these one by one in due time. (I mean, we still got time don't we?)
  
  ## Contributions?
